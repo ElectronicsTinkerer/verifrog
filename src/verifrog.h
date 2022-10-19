@@ -8,8 +8,16 @@
 #ifndef VERIFROG_H
 #define VERIFROG_H
 
-static unsigned int linenum = 0;
-static int comment_level = 0;
+#include "event.h"
+
+extern unsigned int linenum;
+extern int comment_level;
+extern event_t *sch_head;
+
+// TB ticks information relative
+// to design's clock
+extern unsigned int tick_size;
+extern char *tick_units;
 
 #endif
 

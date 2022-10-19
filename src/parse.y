@@ -1,6 +1,7 @@
-// %code requires {
-    // typedef void *yyscan_t;
-// }
+%code requires {
+#include "event.h"
+#include "varvalpair.h"
+}
 
 %{
 #include <stdio.h>
@@ -9,7 +10,6 @@
 #include <string.h>
     
 #include "hashtable.h"
-#include "event.h"
 #include "verifrog.h"
     // Redundant include for using yytoken_kind_t
 #include "parse.tab.h" 
@@ -18,6 +18,7 @@ extern void yyerror();
 extern int yylex();
 
 static const char *get_token_name(int); // yysymbol_kind_t
+static void _schedule_event(varval_t *, int, varval_t *);
 %}
 
 // Declarations (Optional type definitions)
@@ -26,36 +27,85 @@ static const char *get_token_name(int); // yysymbol_kind_t
     event_t *event;
     char *str;
     int ival;
+    varval_t *vv;
 }
 
 // Add args to yyparse and yylex
 %define parse.error custom
 
 // Token defs
-%token<str> NUM TIME IDENT
-%token TICK UNDEF ALWAYS
-%token EQ NEQ
+%token<ival> INUM
+%token<str> IDENT
+%token<str> VERNUM
+%token TICK UNDEF ALWAYS SET EXPECT IMPLIES 
+%token EQ NEQ SIG
 
-%nterm<event>start
+%nterm start
+// %nterm condblk
+%nterm<vv> varval varvalblk
 
 // Parsing ruleset definitions
 %%
 start:
-    %empty                                          {
+    %empty
+    {
         printf("Confuzing empty...\n");
+        sch_head = NULL;
+    };
+    | start TICK INUM IDENT
+    {
+
+        if (tick_size) {
+            printf("WARN: tick size redefined on line %d\n", linenum);
+        }
+        tick_size = $3;
+        tick_units = $4;
+    };
+    // | start ALWAYS '{' condblk '}'
+      // IMPLIES '{' varvalblk '}'
+    // {
+        // printf("ALWAYS");
+        // _schedule_event($
+    // };
+    | start SET '{' varvalblk[vvset] '}'
+      EXPECT '(' INUM[vvcycle] ')' '{' varvalblk[vvxpt] '}'
+    {
+        printf("SET\n");
+        _schedule_event($vvset, $vvcycle, $vvxpt);
+    };
+        
+
+// condblk:
+// %empty // TODO
+    // ;
+
+/* EXPECT BLOCKS are singly-linked lists of var-value pairs */
+varvalblk:
+    %empty
+    {
         $$ = NULL;
     };
-    | start TICK NUM TIME                           {
-
-        $$ = malloc(sizeof(*$$));
+    | varvalblk varval
+    {
+        $$ = $2;
         if ($1) {
             $1->n = $$;
         }
-        // TODO: setup tick var
-        $$->p = $1;
     };
-    | start ALWAYS {
-        printf("ALWAYS");
+    | varvalblk varval ','
+    {
+        $$ = $2;
+        if ($1) {
+            $1->n = $$;
+        }
+    };
+
+varval:
+    IDENT '=' VERNUM
+    {
+        $$ = malloc(sizeof(*$$));
+        $$->var = $1;
+        $$->val = $3;
     };
 
 %%
@@ -94,6 +144,17 @@ static const char *get_token_name(yysymbol_kind_t sym) {
     default:
         return yysymbol_name(sym);
     }
+}
+
+/**
+ * Enter an event into the scheduler's list
+ * @param *sets List of var-val pairs of signals to set
+ * @param delay Number of cycles for expect block
+ * @param *xpcts Var-val pair list
+ * @return 
+ */
+static void _schedule_event(varval_t *sets, int delay, varval_t *xpcts) {
+    printf("TODO: schedule tick\n");
 }
 
 
