@@ -1,6 +1,7 @@
 %code requires {
 #include "event.h"
 #include "varvalpair.h"
+#include "symbol.h"
 }
 
 %{
@@ -38,7 +39,7 @@ static void _schedule_event(varval_t *, int, varval_t *);
 %token<str> IDENT
 %token<str> VERNUM
 %token TICK UNDEF ALWAYS SET EXPECT IMPLIES 
-%token EQ NEQ SIG
+%token EQ NEQ NET
 
 %nterm start
 // %nterm condblk
@@ -60,6 +61,22 @@ start:
         }
         tick_size = $3;
         tick_units = $4;
+    };
+    | start NET IDENT INUM
+    {
+        if (hashtable_contains_skey(sym_table, $3)) {
+            printf("WARN: multiple define net: '%s' on line %d [ignoring...]\n",
+                   $3, linenum);
+        } else {
+            symbol_t *s = malloc(sizeof(*s));
+            if (!s) {
+                printf("ERROR: could not allocate symbol! '%s'\n", $3);
+            }
+
+            s->sym = $3;
+            s->width = $4;
+            hashtable_sput(sym_table, $3, s);
+        }
     };
     // | start ALWAYS '{' condblk '}'
       // IMPLIES '{' varvalblk '}'
@@ -103,9 +120,15 @@ varvalblk:
 varval:
     IDENT '=' VERNUM
     {
-        $$ = malloc(sizeof(*$$));
-        $$->var = $1;
-        $$->val = $3;
+        if (hashtable_contains_skey(sym_table, $1)) {
+            $$ = malloc(sizeof(*$$));
+            $$->var = $1;
+            $$->val = $3;
+        } else {
+            printf("ERROR: Unknown net '%s' on line %d.\n",
+                   $1, linenum);
+            yyerror();
+        }
     };
 
 %%
@@ -159,8 +182,8 @@ static void _schedule_event(varval_t *sets, int delay, varval_t *xpcts) {
 
 
 void yyerror() {
-    /** dummy */
     printf("YYERROR!\n");
+    exit(EXIT_FAILURE);
 }
 
 

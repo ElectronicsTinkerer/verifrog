@@ -81,7 +81,7 @@ tick                                { PACC; return TICK; };
 always                              { PACC; return ALWAYS; };
 set                                 { PACC; return SET; };
 expect                              { PACC; return EXPECT; };
-sig                                 { PACC; return SIG; };
+net                                 { PACC; return NET; };
 "@"                                 { PACC; return yytext[0]; };
 
 [A-Za-z_][0-9A-Za-z_]*              {

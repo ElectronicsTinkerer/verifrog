@@ -1,6 +1,13 @@
 
 tick 100 ns
 
+net clk 1
+net clk 1
+net addr_in 4
+net addr_out 4
+net data_in 8
+net data_out 8
+
 /*
 always { ! bus_en } => {
   mem_rd = 1'b0
@@ -12,6 +19,6 @@ set {
     data_in = 8'h29
   } expect (2) {
     data_out = 8'h31,
-	addr_out = 8'h4
+	addr_out = 8'h4 // Error: wrong width!
   }
 
