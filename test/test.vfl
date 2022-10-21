@@ -15,7 +15,7 @@ always { ! bus_en } => {
 */
 
 set {
-    addr = 4'h3,
+    addr_in = 4'h3,
     data_in = 8'h29
   } expect (2) {
     data_out = 8'h31,

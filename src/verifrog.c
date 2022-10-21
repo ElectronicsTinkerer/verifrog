@@ -10,6 +10,7 @@
 
 #include "hashtable.h"
 #include "verifrog.h"
+#include "varvalpair.h"
 #include "event.h"
 #include "parse.tab.h"
 #include "lex.yy.h"
@@ -19,6 +20,8 @@ int comment_level = 0;
 event_t *sch_head = NULL;
 hashtable_t *sym_table = NULL;
 int table_width = 0;
+int current_tick = 0;
+int max_tick = 0;
 
 unsigned int tick_size = 0;
 char *tick_units = NULL;
@@ -79,8 +82,20 @@ int main ( int argc, char *argv[] ) {
  */
 static void generate_schedule_file(FILE *of) {
 	// Go through all events and output them to the file
+	varval_t *e;
 	for (; sch_head; sch_head = sch_head->n) {
-			
+		printf("SCHED:\n");
+		e = sch_head->sets;
+		for (; e; e = e->n) {
+			printf("  S - %s = %s;\n",
+				   e->var, e->val);
+		}
+		e = sch_head->xpcts;
+		for (; e; e = e->n) {
+			printf("  E - %s = %s;\n",
+				   e->var, e->val);
+		}
+		// TODO: free data as it is lost....
 	}
 }
 

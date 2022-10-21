@@ -12,7 +12,7 @@ PROG := $(BUILD_DIR)/$(BIN_NAME)
 
 SRC_PARSE := parse.tab.c 
 SRC_LEX := lex.yy.c 
-SRCS := verifrog.c hashtable.c
+SRCS := verifrog.c hashtable.c event.c
 SRCSP := $(SRCS:%.c=$(SRC_DIR)/%.c)
 OBJS := ${SRCS:.c=.o}
 OBJSP :=$(SRCS:%.c=$(BUILD_DIR)/%.o)

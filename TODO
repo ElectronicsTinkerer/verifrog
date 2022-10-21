@@ -1,5 +1,8 @@
 # VERIFROG TODOs
 
+* "drain" keyword which waits until the current event queue is empty before continuing on with tests
+* Add alias for signal names support
+
 ## Possible future improvements
 
 * Add ability to use arbitrary verilog expressions in the varval field:

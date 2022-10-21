@@ -8,13 +8,13 @@
 #ifndef VERIFROG_H
 #define VERIFROG_H
 
-#include "event.h"
-
 extern unsigned int linenum;
 extern int comment_level;
-extern event_t *sch_head;
+extern struct event_t *sch_head;
 extern hashtable_t *sym_table;
 extern int table_width;
+extern int current_tick;
+extern int max_tick;
 
 // TB ticks information relative
 // to design's clock

@@ -11,8 +11,9 @@
 typedef struct event_t {
 	struct event_t *n;
 	struct event_t *p;
-	unsigned int timeslot;
-	
+	unsigned int tick;
+	struct varval_t *sets;
+	struct varval_t *xpcts;
 } event_t;
 
 #endif
