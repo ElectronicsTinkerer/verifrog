@@ -42,7 +42,7 @@ void _insert_sets(event_t *, varval_t *);
 %token<str> IDENT
 %token<str> VERNUM
 %token TICK UNDEF ALWAYS SET EXPECT IMPLIES 
-%token EQ NEQ NET
+%token EQ NEQ NET DRAIN
 
 %nterm start
 // %nterm condblk
@@ -97,6 +97,11 @@ start:
         printf("EXPECT (%d)\n", current_tick + $vvcycle);
         _schedule_event($vvxpt, current_tick + $vvcycle, 0);
     };
+    | start DRAIN
+    {
+        current_tick = _get_last_event()->tick;
+    };
+        
 
         
 
@@ -190,6 +195,11 @@ static const char *get_token_name(yysymbol_kind_t sym) {
  */
 static void _schedule_event(varval_t *vvl, int tick, int sched_set) {
 
+    // Don't schedule NULL events
+    if (!vvl) {
+        return;
+    }
+    
     event_t *e;
     event_t *m = NULL;
 

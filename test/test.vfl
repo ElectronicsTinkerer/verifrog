@@ -14,6 +14,10 @@ always { ! bus_en } => {
 }
 */
 
+// Set performs two operations:
+// First, it is used for assigning values to nets
+// Second, it increments the simulation tick. It is
+// the only way to increment the simulation tick.
 set {
     addr_in = 4'h3,
     data_in = 8'h29
@@ -37,8 +41,17 @@ set {
 set {
     addr_in = 4'hA,
     data_in = 8'h70
-  } expect (2) {
-    addr_out = 8'hC,
-    data_out = 8'h72
   }
+
+drain // Go to end of scheduler's stack
+
+set {
+    addr_in = 4'hB,
+    data_in = 8'h74
+  } expect (2) {
+    addr_out = 8'hD,
+    data_out = 8'h76
+  }
+
+set {} // Inc the sim tick
 

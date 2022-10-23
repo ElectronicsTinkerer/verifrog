@@ -2,7 +2,6 @@
 
 ## TODO
 
-* "drain" keyword which waits until the current event queue is empty before continuing on with tests
 * Add alias for signal names support
 
 ## Possible future improvements
@@ -13,3 +12,6 @@
 ## TO-DOne
 
 * Move expect out of set's grammar, allowing multiple time slots of expect for a single set operation
+* "drain" keyword which waits until the current event queue is empty before continuing on with tests
+
+
