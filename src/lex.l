@@ -84,6 +84,7 @@ set                                 { PACC; return SET; };
 expect                              { PACC; return EXPECT; };
 net                                 { PACC; return NET; };
 drain                               { PACC; return DRAIN; };
+alias                               { PACC; return ALIAS; };
 "@"                                 { PACC; return yytext[0]; };
 
 [A-Za-z_][0-9A-Za-z_]*              {

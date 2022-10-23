@@ -42,7 +42,7 @@ void _insert_sets(event_t *, varval_t *);
 %token<str> IDENT
 %token<str> VERNUM
 %token TICK UNDEF ALWAYS SET EXPECT IMPLIES 
-%token EQ NEQ NET DRAIN
+%token EQ NEQ NET DRAIN ALIAS
 
 %nterm start
 // %nterm condblk
@@ -73,11 +73,27 @@ start:
             symbol_t *s = malloc(sizeof(*s));
             if (!s) {
                 printf("ERROR: could not allocate symbol! '%s'\n", $3);
+                yyerror();
             }
 
             s->sym = $3;
             s->width = $4;
             hashtable_sput(sym_table, $3, s);
+        }
+    };
+    | start ALIAS IDENT[new] IDENT[old]
+    {
+        if (hashtable_contains_skey(sym_table, $3)) {
+            printf("WARN: multiple define net: '%s' on line %d [ignoring...]\n",
+                   $3, linenum);
+        } else {
+            symbol_t *s = (symbol_t*)hashtable_sget(sym_table, $old);
+            if (!s) {
+                printf("ERROR: Symbol not defined before alias! '%s'\n", $old);
+                yyerror();
+            }
+
+            hashtable_sput(sym_table, $new, s);
         }
     };
     // | start ALWAYS '{' condblk '}'

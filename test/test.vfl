@@ -8,6 +8,9 @@ net addr_out 4
 net data_in 8
 net data_out 8
 
+alias a_in addr_in
+alias d_in data_in
+
 /*
 always { ! bus_en } => {
   mem_rd = 1'b0
@@ -48,9 +51,14 @@ drain // Go to end of scheduler's stack
 set {
     addr_in = 4'hB,
     data_in = 8'h74
-  } expect (2) {
+  }
+  expect (2) {
     addr_out = 8'hD,
     data_out = 8'h76
+  }
+  expect (2) {
+    a_in = 8'hD,
+    d_in = 8'h76
   }
 
 set {} // Inc the sim tick
