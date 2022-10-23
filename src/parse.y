@@ -19,7 +19,7 @@ extern void yyerror();
 extern int yylex();
 
 static const char *get_token_name(int); // yysymbol_kind_t
-static void _schedule_event(varval_t *, int, varval_t *);
+static void _schedule_event(varval_t *, int, int);
 static event_t *_get_last_event();
 void _insert_xpcts(event_t *, varval_t *);
 void _insert_sets(event_t *, varval_t *);
@@ -90,12 +90,12 @@ start:
     {
         max_tick = current_tick++;
         printf("SET (%d)\n", current_tick);
-        _schedule_event($vvset, current_tick, NULL);
+        _schedule_event($vvset, current_tick, 1);
     };
     | start EXPECT '(' INUM[vvcycle] ')' '{' varvalblk[vvxpt] '}'
     {
         printf("EXPECT (%d)\n", current_tick + $vvcycle);
-        _schedule_event(NULL, current_tick + $vvcycle, $vvxpt);
+        _schedule_event($vvxpt, current_tick + $vvcycle, 0);
     };
 
         
@@ -178,136 +178,76 @@ static const char *get_token_name(yysymbol_kind_t sym) {
     }
 }
 
+
 /**
  * Enter an event into the scheduler's list
- * @param *sets List of var-val pairs of signals to set
- * @param tick The tick to place the event on
- * @param *xpcts Var-val pair list
- * @return nn
+ * 
+ * @param *vvl var-val pair list to add
+ * @param tick The scheduler tick of the event to modify
+ * @param sched_set 1 = SETs
+ *                  0 = EXPECTs
+ * @return 
  */
-static void _schedule_event(varval_t *sets, int tick, varval_t *xpcts) {
-
+static void _schedule_event(varval_t *vvl, int tick, int sched_set) {
 
     event_t *e;
     event_t *m = NULL;
 
-    // -----------------
-    // SCHEDULE THE SETS
-    // -----------------
-    if (sets) {
-        for (e = sch_head; e && e->tick < tick; e = e->n) {
-            /* SEEK */
-        }
+    for (e = sch_head; e && e->tick < tick; e = e->n) {
+        /* SEEK */
+    }
 
-        // If an event for this tick does not exist, create a new event
-        if (!e || e->tick != tick) {
-            m = malloc(sizeof(*m));
-            if (!m) {
-                printf("ERROR: failed allocating event (sets)\n");
-                yyerror();
-            }
-            m->tick = tick;
-            m->p = NULL;
-            m->n = NULL;
-            m->sets = NULL;
-            m->xpcts = NULL;
+    // If an event for this tick does not exist, create a new event
+    if (!e || e->tick != tick) {
+        m = malloc(sizeof(*m));
+        if (!m) {
+            printf("ERROR: failed allocating event (sets)\n");
+            yyerror();
         }
+        m->tick = tick;
+        m->p = NULL;
+        m->n = NULL;
+        m->sets = NULL;
+        m->xpcts = NULL;
+    }
 
-        // If no events in list, create a new one
-        if (!e) {
-            printf("INFO: creating new tick (sets)\n");
-            if (!sch_head) {
+    // If no events in list, create a new one
+    if (!e) {
+        printf("INFO: creating new tick (sets)\n");
+        if (!sch_head) {
+            sch_head = m;
+        } else {
+            event_t *l = _get_last_event();
+            l->n = m;
+            m->p = l;
+        }
+        e = m;
+    }
+    // Otherwise, insert the event
+    else {
+        printf("INFO: updating existing tick (sets)\n");
+        if (e->tick != tick) { // Implies that e->tick > tick
+            if (!e->p) {
                 sch_head = m;
-            } else {
-                event_t *l = _get_last_event();
-                l->n = m;
-                m->p = l;
             }
-            _insert_sets(m, sets);
-        }
-        // Otherwise, insert the event
-        else {
-            printf("INFO: updating existing tick (sets)\n");
-            if (e->tick != tick) { // Implies that e->tick > tick
-                if (!e->p) {
-                    sch_head = m;
-                }
                 
-                // Insert m before e
-                m->p = e->p;
-                m->n = e;
-                e->p = m;
-                if (m->p) {
-                    m->p->n = m;
-                }
-                e = m;
+            // Insert m before e
+            m->p = e->p;
+            m->n = e;
+            e->p = m;
+            if (m->p) {
+                m->p->n = m;
             }
-
-            // Insert each set into the sets list of the existing event
-            _insert_sets(e, sets);
+            e = m;
         }
     }
 
-    // -----------------
-    // SCHEDULE THE EXPECTS
-    // -----------------
-
-    if (xpcts) {
-        for (e = sch_head;
-             e && e->tick < tick;
-             e = e->n) {
-            /* SEEK */
-        }
-
-        // If an event for this tick does not exist, create a new event
-        if (!e || e->tick != tick) {
-            m = malloc(sizeof(*m));
-            if (!m) {
-                printf("ERROR: failed allocating event (expects)\n");
-                yyerror();
-            }
-            m->tick = tick;
-            m->p = NULL;
-            m->n = NULL;
-            m->sets = NULL;
-            m->xpcts = NULL;
-        }
-
-        // If no events in list, create a new one
-        if (!e) {
-            printf("INFO: creating new tick (expects)\n");
-            if (!sch_head) {
-                sch_head = m;
-            } else {
-                event_t *l = _get_last_event();
-                l->n = m;
-                m->p = l;
-            }
-            _insert_xpcts(m, xpcts);
-        }
-        // Otherwise, insert the event
-        else {
-            printf("INFO: updating existing tick (expects)\n");
-            if (e->tick != tick) { // Implies that e->tick > tick
-                if (!e->p) {
-                    sch_head = m;
-                }
-                
-                // Insert m before e
-                m->p = e->p;
-                m->n = e;
-                e->p = m;
-                if (m->p) {
-                    m->p->n = m;
-                }
-                e = m;
-            }
-
-
-            // Insert each expect into the expects list of the existing event
-            _insert_xpcts(e, xpcts);
-        }
-    }    
+    // Insert each set into the sets list of the event
+    if (sched_set) {
+        _insert_sets(e, vvl);
+    } else {
+        _insert_xpcts(e, vvl);
+    }
 }
 
 
