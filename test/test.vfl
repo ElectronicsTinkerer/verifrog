@@ -20,6 +20,8 @@ set {
   } expect (2) {
     data_out = 8'h31,
 	addr_out = 8'h4 // Error: wrong width!
+  } expect (5) {
+    addr_out = 4'b3 // Test for scheduling multiple events from one expect
   }
 
 

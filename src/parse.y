@@ -53,7 +53,7 @@ void _insert_sets(event_t *, varval_t *);
 start:
     %empty
     {
-        printf("Confuzing empty...\n");
+        printf("DEBUG: Confuzing empty...\n");
     };
     | start TICK INUM IDENT
     {
@@ -87,11 +87,17 @@ start:
         // _schedule_event($
     // };
     | start SET '{' varvalblk[vvset] '}'
-      EXPECT '(' INUM[vvcycle] ')' '{' varvalblk[vvxpt] '}'
     {
-        printf("SET\n");
-        _schedule_event($vvset, $vvcycle, $vvxpt);
+        max_tick = current_tick++;
+        printf("SET (%d)\n", current_tick);
+        _schedule_event($vvset, current_tick, NULL);
     };
+    | start EXPECT '(' INUM[vvcycle] ')' '{' varvalblk[vvxpt] '}'
+    {
+        printf("EXPECT (%d)\n", current_tick + $vvcycle);
+        _schedule_event(NULL, current_tick + $vvcycle, $vvxpt);
+    };
+
         
 
 // condblk:
@@ -175,114 +181,133 @@ static const char *get_token_name(yysymbol_kind_t sym) {
 /**
  * Enter an event into the scheduler's list
  * @param *sets List of var-val pairs of signals to set
- * @param delay Number of cycles for expect block
+ * @param tick The tick to place the event on
  * @param *xpcts Var-val pair list
- * @return 
+ * @return nn
  */
-static void _schedule_event(varval_t *sets, int delay, varval_t *xpcts) {
+static void _schedule_event(varval_t *sets, int tick, varval_t *xpcts) {
+
+
+    event_t *e;
+    event_t *m = NULL;
 
     // -----------------
     // SCHEDULE THE SETS
     // -----------------
-    
-    event_t *e;
-    for (e = sch_head; e && e->tick < current_tick; e = e->n) {
-        /* SEEK */
-    }
-
-    event_t *m = NULL;
-    // If an event for this tick does not exist, create a new event
-    if (!e || e->tick != current_tick) {
-        m = malloc(sizeof(*m));
-        if (!m) {
-            printf("ERROR: failed allocating event (sets)\n");
-            yyerror();
-        }
-        m->tick = current_tick;
-        m->p = NULL;
-        m->n = NULL;
-        m->sets = NULL;
-        m->xpcts = NULL;
-    }
-
-    // If no events in list, create a new one
-    if (!e) {
-        printf("INFO: creating new tick (sets)\n");
-        if (!sch_head) {
-            sch_head = m;
-        } else {
-            event_t *l = _get_last_event();
-            l->n = m;
-            m->p = l;
-        }
-        m->sets = sets;
-    }
-    // Otherwise, insert the event
-    else {
-        printf("INFO: updating existing tick (sets)\n");
-        if (e->tick != current_tick) {
-            m->p = e;
-            m->n = e->n;
-            e->n = m;
-            e = m;
+    if (sets) {
+        for (e = sch_head; e && e->tick < tick; e = e->n) {
+            /* SEEK */
         }
 
-        // Insert each set into the sets list of the existing event
-        _insert_sets(e, sets);
-    }
+        // If an event for this tick does not exist, create a new event
+        if (!e || e->tick != tick) {
+            m = malloc(sizeof(*m));
+            if (!m) {
+                printf("ERROR: failed allocating event (sets)\n");
+                yyerror();
+            }
+            m->tick = tick;
+            m->p = NULL;
+            m->n = NULL;
+            m->sets = NULL;
+            m->xpcts = NULL;
+        }
 
+        // If no events in list, create a new one
+        if (!e) {
+            printf("INFO: creating new tick (sets)\n");
+            if (!sch_head) {
+                sch_head = m;
+            } else {
+                event_t *l = _get_last_event();
+                l->n = m;
+                m->p = l;
+            }
+            _insert_sets(m, sets);
+        }
+        // Otherwise, insert the event
+        else {
+            printf("INFO: updating existing tick (sets)\n");
+            if (e->tick != tick) { // Implies that e->tick > tick
+                if (!e->p) {
+                    sch_head = m;
+                }
+                
+                // Insert m before e
+                m->p = e->p;
+                m->n = e;
+                e->p = m;
+                if (m->p) {
+                    m->p->n = m;
+                }
+                e = m;
+            }
+
+            // Insert each set into the sets list of the existing event
+            _insert_sets(e, sets);
+        }
+    }
 
     // -----------------
     // SCHEDULE THE EXPECTS
     // -----------------
-    
-    for (e = sch_head;
-         e && e->tick < current_tick + delay;
-         e = e->n) {
-        /* SEEK */
-    }
 
-    // If an event for this tick does not exist, create a new event
-    if (!e || e->tick != current_tick + delay) {
-        m = malloc(sizeof(*m));
-        if (!m) {
-            printf("ERROR: failed allocating event (expects)\n");
-            yyerror();
-        }
-        m->tick = current_tick + delay;
-        m->p = NULL;
-        m->n = NULL;
-        m->sets = NULL;
-        m->xpcts = NULL;
-    }
-
-    // If no events in list, create a new one
-    if (!e) {
-        printf("INFO: creating new tick (expects)\n");
-        if (!sch_head) {
-            sch_head = m; // TODO: Find end of ll and append this to it
-        } else {
-            event_t *l = _get_last_event();
-            l->n = m;
-            m->p = l;
-        }
-        _insert_xpcts(m, xpcts);
-    }
-    // Otherwise, insert the event
-    else {
-        printf("INFO: updating existing tick (expects)\n");
-        if (e->tick != current_tick + delay) {
-            m->p = e;
-            m->n = e->n;
-            e->n = m;
-            e = m;
+    if (xpcts) {
+        for (e = sch_head;
+             e && e->tick < tick;
+             e = e->n) {
+            /* SEEK */
         }
 
-        // Insert each expect into the expects list of the existing event
-        _insert_xpcts(e, xpcts);
-    }
+        // If an event for this tick does not exist, create a new event
+        if (!e || e->tick != tick) {
+            m = malloc(sizeof(*m));
+            if (!m) {
+                printf("ERROR: failed allocating event (expects)\n");
+                yyerror();
+            }
+            m->tick = tick;
+            m->p = NULL;
+            m->n = NULL;
+            m->sets = NULL;
+            m->xpcts = NULL;
+        }
 
-    max_tick = current_tick++;
+        // If no events in list, create a new one
+        if (!e) {
+            printf("INFO: creating new tick (expects)\n");
+            if (!sch_head) {
+                sch_head = m;
+            } else {
+                event_t *l = _get_last_event();
+                l->n = m;
+                m->p = l;
+            }
+            _insert_xpcts(m, xpcts);
+        }
+        // Otherwise, insert the event
+        else {
+            printf("INFO: updating existing tick (expects)\n");
+            if (e->tick != tick) { // Implies that e->tick > tick
+                if (!e->p) {
+                    sch_head = m;
+                }
+                
+                // Insert m before e
+                m->p = e->p;
+                m->n = e;
+                e->p = m;
+                if (m->p) {
+                    m->p->n = m;
+                }
+                e = m;
+            }
+
+
+            // Insert each expect into the expects list of the existing event
+            _insert_xpcts(e, xpcts);
+        }
+    }    
 }
 
 

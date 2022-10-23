@@ -1,5 +1,7 @@
 # VERIFROG TODOs
 
+## TODO
+
 * "drain" keyword which waits until the current event queue is empty before continuing on with tests
 * Add alias for signal names support
 
@@ -8,3 +10,6 @@
 * Add ability to use arbitrary verilog expressions in the varval field:
   ` var = (other_sig + 4'b1101 >> 2) `
 
+## TO-DOne
+
+* Move expect out of set's grammar, allowing multiple time slots of expect for a single set operation

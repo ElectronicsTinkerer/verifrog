@@ -22,6 +22,7 @@ static unsigned int _parse_bin(char*);
 static unsigned int _parse_oct(char*);
 static unsigned int _parse_dec(char*);
 static unsigned int _parse_hex(char*);
+extern void yyerror();
 
 extern YYSTYPE yylval;
 %}
@@ -104,12 +105,12 @@ net                                 { PACC; return NET; };
 /* ***************** SUBROUTINES ***************** */
 
 static char *_alloc_str() {
-    printf("Allocating yytext\n"); // DEBUG
+    // printf("Allocating yytext\n"); // DEBUG
     char *str = malloc(sizeof(*(yylval.str)) * yyleng);
     if (str)
     {
         strcpy(str, yytext);
-        printf("YYTEXT: '%s' STR: '%s'\n", yytext, str); // DEBUG
+        // printf("YYTEXT: '%s' STR: '%s'\n", yytext, str); // DEBUG
     }
     else
     {

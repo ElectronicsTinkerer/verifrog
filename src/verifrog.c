@@ -20,7 +20,7 @@ int comment_level = 0;
 event_t *sch_head = NULL;
 hashtable_t *sym_table = NULL;
 int table_width = 0;
-int current_tick = 0;
+int current_tick = -1;
 int max_tick = 0;
 
 unsigned int tick_size = 0;
