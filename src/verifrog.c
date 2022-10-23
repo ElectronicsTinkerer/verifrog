@@ -81,19 +81,22 @@ int main ( int argc, char *argv[] ) {
  * @return none
  */
 static void generate_schedule_file(FILE *of) {
+
+	printf("Tick = %d %s\n", tick_size, tick_units);
+	
 	// Go through all events and output them to the file
-	varval_t *e;
+	varval_t *v;
 	for (; sch_head; sch_head = sch_head->n) {
-		printf("SCHED:\n");
-		e = sch_head->sets;
-		for (; e; e = e->n) {
+		printf("SCHED: @ %d ticks\n", sch_head->tick);
+		v = sch_head->sets;
+		for (; v; v = v->n) {
 			printf("  S - %s = %s;\n",
-				   e->var, e->val);
+				   v->var, v->val);
 		}
-		e = sch_head->xpcts;
-		for (; e; e = e->n) {
+		v = sch_head->xpcts;
+		for (; v; v = v->n) {
 			printf("  E - %s = %s;\n",
-				   e->var, e->val);
+				   v->var, v->val);
 		}
 		// TODO: free data as it is lost....
 	}

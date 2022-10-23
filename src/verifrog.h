@@ -21,7 +21,6 @@ extern int max_tick;
 extern unsigned int tick_size;
 extern char *tick_units;
 
-
 static void generate_schedule_file(FILE *);
 
 #endif

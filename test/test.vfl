@@ -2,7 +2,7 @@
 tick 100 ns
 
 net clk 1
-net clk 1
+// net clk 1 // WARNING
 net addr_in 4
 net addr_out 4
 net data_in 8
@@ -20,5 +20,23 @@ set {
   } expect (2) {
     data_out = 8'h31,
 	addr_out = 8'h4 // Error: wrong width!
+  }
+
+
+set {
+    addr_in = 4'h7,
+    data_in = 8'h33
+  } expect (2) {
+    addr_out = 4'h9,
+    data_out = 8'h9
+  }
+
+
+set {
+    addr_in = 4'hA,
+    data_in = 8'h70
+  } expect (2) {
+    addr_out = 8'hC,
+    data_out = 8'h72
   }
 

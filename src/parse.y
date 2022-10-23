@@ -20,6 +20,9 @@ extern int yylex();
 
 static const char *get_token_name(int); // yysymbol_kind_t
 static void _schedule_event(varval_t *, int, varval_t *);
+static event_t *_get_last_event();
+void _insert_xpcts(event_t *, varval_t *);
+void _insert_sets(event_t *, varval_t *);
 %}
 
 // Declarations (Optional type definitions)
@@ -183,11 +186,11 @@ static void _schedule_event(varval_t *sets, int delay, varval_t *xpcts) {
     // -----------------
     
     event_t *e;
-    for (e = sch_head; e && e->tick >= current_tick; e = e->n) {
+    for (e = sch_head; e && e->tick < current_tick; e = e->n) {
         /* SEEK */
     }
 
-    event_t *m;
+    event_t *m = NULL;
     // If an event for this tick does not exist, create a new event
     if (!e || e->tick != current_tick) {
         m = malloc(sizeof(*m));
@@ -195,48 +198,37 @@ static void _schedule_event(varval_t *sets, int delay, varval_t *xpcts) {
             printf("ERROR: failed allocating event (sets)\n");
             yyerror();
         }
-    } else {
-        m = e;
+        m->tick = current_tick;
+        m->p = NULL;
+        m->n = NULL;
+        m->sets = NULL;
+        m->xpcts = NULL;
     }
 
     // If no events in list, create a new one
     if (!e) {
         printf("INFO: creating new tick (sets)\n");
-        sch_head = m;
-        m->p = NULL;
-        m->n = NULL;
-        m->tick = current_tick;
+        if (!sch_head) {
+            sch_head = m;
+        } else {
+            event_t *l = _get_last_event();
+            l->n = m;
+            m->p = l;
+        }
         m->sets = sets;
     }
     // Otherwise, insert the event
     else {
         printf("INFO: updating existing tick (sets)\n");
-        m->p = e;
-        m->n = e->n;
-        e->n = m;
+        if (e->tick != current_tick) {
+            m->p = e;
+            m->n = e->n;
+            e->n = m;
+            e = m;
+        }
 
         // Insert each set into the sets list of the existing event
-        varval_t *i = sets;
-        varval_t *j, *p;
-        int found = 0;
-        while (i) {
-            for (j = e->sets; j && !found; j = j->n) {
-                if (strcmp(j->var, i->var)) {
-                    printf("WARN: Multiple values for '%s' at time %d on line %d\n",
-                           j->var, current_tick, linenum);
-                    found = 1;
-                }
-            }
-            if (!found) {
-                // Insert at beginning of list
-                p = e->sets;
-                e->sets = i;
-                i->n = p;
-            }
-            printf("SP: %s\n", i->var);
-            i = i->n; 
-            found = 0;
-        }
+        _insert_sets(e, sets);
     }
 
 
@@ -245,7 +237,7 @@ static void _schedule_event(varval_t *sets, int delay, varval_t *xpcts) {
     // -----------------
     
     for (e = sch_head;
-         e && e->tick >= current_tick + delay;
+         e && e->tick < current_tick + delay;
          e = e->n) {
         /* SEEK */
     }
@@ -257,53 +249,120 @@ static void _schedule_event(varval_t *sets, int delay, varval_t *xpcts) {
             printf("ERROR: failed allocating event (expects)\n");
             yyerror();
         }
-    } else {
-        m = e;
+        m->tick = current_tick + delay;
+        m->p = NULL;
+        m->n = NULL;
+        m->sets = NULL;
+        m->xpcts = NULL;
     }
 
     // If no events in list, create a new one
     if (!e) {
         printf("INFO: creating new tick (expects)\n");
-        sch_head = m; // TODO: Find end of ll and append this to it
-        m->p = NULL;
-        m->n = NULL;
-        m->tick = current_tick + delay;
-        m->xpcts = xpcts;
+        if (!sch_head) {
+            sch_head = m; // TODO: Find end of ll and append this to it
+        } else {
+            event_t *l = _get_last_event();
+            l->n = m;
+            m->p = l;
+        }
+        _insert_xpcts(m, xpcts);
     }
     // Otherwise, insert the event
     else {
         printf("INFO: updating existing tick (expects)\n");
-        m->p = e;
-        m->n = e->n;
-        e->n = m;
+        if (e->tick != current_tick + delay) {
+            m->p = e;
+            m->n = e->n;
+            e->n = m;
+            e = m;
+        }
 
         // Insert each expect into the expects list of the existing event
-        varval_t *i = xpcts;
-        varval_t *j, *p;
-        int found = 0;
-        while (i) {
-            for (j = e->xpcts; j && !found; j = j->n) {
-                if (strcmp(j->var, i->var)) {
-                    printf("WARN: Multiple values for '%s' at time %d on line %d\n",
-                           j->var, current_tick + delay, linenum);
-                    found = 1;
-                }
-            }
-            if (!found) {
-                // Insert at beginning of list
-                p = e->xpcts;
-                e->xpcts = i;
-                i->n = p;
-            }
-            printf("SS: %s\n", i->var);
-            i = i->n;
-            found = 0;
-        }
+        _insert_xpcts(e, xpcts);
     }
 
-    ++current_tick;
+    max_tick = current_tick++;
 }
 
+
+
+/**
+ * Insert all sets from the sets list to the event's sets list
+ * 
+ * @param *e The event to which esets should be added
+ * @param *sets The sets list
+ * @return none
+ */
+void _insert_sets(event_t *e, varval_t *sets) {
+    varval_t *i = sets;
+    varval_t *j, *p, *q;
+    int found = 0;
+    while (i) {
+        printf("SS: %s\n", i->var);
+        for (j = e->sets; j && !found; j = j->n) {
+            if (!strcmp(j->var, i->var)) {
+                printf("WARN: Multiple values for '%s' at time %d on line %d\n",
+                       j->var, e->tick, linenum);
+                found = 1;
+            }
+        }
+        if (!found) {
+            // Insert at beginning of list
+            p = e->sets;
+            e->sets = i;
+            q = i->n;
+            i->n = p;
+            i = q;
+        } else {
+            i = i->n;
+        }
+        found = 0;
+    }
+}
+
+
+/**
+ * Insert all xpcts from the xpcts list to the event's xpcts list
+ * 
+ * @param *e The event to which expcts should be added
+ * @param *xpcts The xpcts list
+ * @return none
+ */
+void _insert_xpcts(event_t *e, varval_t *xpcts) {
+    varval_t *i = xpcts;
+    varval_t *j, *p, *q;
+    int found = 0;
+    while (i) {
+        printf("SS: %s\n", i->var);
+        for (j = e->xpcts; j && !found; j = j->n) {
+            if (!strcmp(j->var, i->var)) {
+                printf("WARN: Multiple values for '%s' at time %d on line %d\n",
+                       j->var, e->tick, linenum);
+                found = 1;
+            }
+        }
+        if (!found) {
+            // Insert at beginning of list
+            p = e->xpcts;
+            e->xpcts = i;
+            q = i->n;
+            i->n = p;
+            i = q;
+        } else {
+            i = i->n;
+        }
+        found = 0;
+    }
+}
+    
+event_t *_get_last_event() {
+    event_t *i;
+    for (i = sch_head; i && i->n; i = i->n) {
+        /* SEEK */
+    }
+    return i;
+}
 
 void yyerror() {
     printf("YYERROR!\n");
