@@ -101,27 +101,31 @@ static void generate_schedule_file(FILE *of) {
 	// each expect block
 	char *input_bv  = malloc((sizeof(*input_bv) * input_offset) + 1);
 	char *output_bv = malloc((sizeof(*output_bv) * output_offset) + 1);
+	char *output_mask = malloc((sizeof(*output_mask) * output_offset) + 1);
 	input_bv[input_offset]   = '\0';
 	output_bv[output_offset] = '\0';
 	
 	// Go through all events and output them to the file
 	varval_t *v, *vt;
 	event_t *et;
+	symbol_t *s;
 	while(sch_head) {
-		// Reset the expect vector
-		memset(output_bv, (int)'0', output_offset);
+		// Reset the expect and mask vectors
+		memset(output_bv, '0', output_offset);
+		memset(output_mask, '0', output_offset);
 		
 		printf("SCHED: @ %d ticks\n", sch_head->tick);
 		v = sch_head->sets;
 		while (v) {
 			printf("  S - %s = %s;\n",
 				   v->var, v->val);
-			symbol_t *s = (symbol_t*)hashtable_sget(sym_table, v->var);
+			s = (symbol_t*)hashtable_sget(input_table, v->var);
 			printf("    --> %d, %d\n", s->offset, s->width);
 			
 			// Set the characters in the bit vectors
+			memcpy(&(input_bv[s->offset]), v->val, s->width);
 			
-			// Free the var-val pair
+			// Free the var-val pair and get the next in the list
 			vt = v->n;
 			varval_destroy(&v);
 			v = vt;
@@ -130,10 +134,23 @@ static void generate_schedule_file(FILE *of) {
 		while (v) {
 			printf("  E - %s = %s;\n",
 				   v->var, v->val);
+			s = (symbol_t*)hashtable_sget(output_table, v->var);
+			
+			// Set the characters in the bit vectors
+			memcpy(output_bv + s->offset, v->val, s->width);
+			
+			// Set the bits in the expect mask
+			memset(output_mask + s->offset, '1', s->width);
+
+			// Free the var-val pair and get the next in the list
 			vt = v->n;
 			varval_destroy(&v);
 			v = vt;
 		}
+
+		fprintf(of, "%s_%s_%s\n", input_bv, output_bv, output_mask);
+
+		// Free the event and get the next
 		et = sch_head->n;
 		event_destroy(&sch_head);
 		sch_head = et;

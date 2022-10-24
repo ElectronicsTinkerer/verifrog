@@ -2,7 +2,6 @@
 
 ## TODO
 
-* Add generation of data file for verilog TB
 * Add TB generation itself
 * Free symbol table
 
@@ -20,5 +19,6 @@
 * Add proper freeing of memory (fix that *everything* is currently leaked...)
 * Add indication of clock signal's name
 * Add parsing of integer literals in set/expect blocks and conversion to binary string
+* Add generation of data file for verilog TB
 
 
