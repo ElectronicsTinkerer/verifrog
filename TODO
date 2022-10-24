@@ -5,12 +5,12 @@
 * Add generation of data file for verilog TB
 * Add TB generation itself
 * Free symbol table
-* Add parsing of integer literals in set/expect blocks and conversion to binary string
 
 ## Possible future improvements
 
 * Add ability to use arbitrary verilog expressions in the varval field:
   ` var = (other_sig + 4'b1101 >> 2) `
+* Convert flex/bison to use reentrant scheme instead of global vars
 
 ## TO-DOne
 
@@ -19,5 +19,6 @@
 * Add alias for signal names support
 * Add proper freeing of memory (fix that *everything* is currently leaked...)
 * Add indication of clock signal's name
+* Add parsing of integer literals in set/expect blocks and conversion to binary string
 
 

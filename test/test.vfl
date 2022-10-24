@@ -4,7 +4,9 @@ tick clk 100 ns
 // Direction is relative to the module under test.
 // (i.e., the same direction as the module's port
 //  declarations)
-input clk 1
+// Note that the clock input should not be defined
+// here! It must be the same net name as what is
+// declared in the tick specifier above.
 input addr_in 4
 output addr_out 4
 input data_in 8
@@ -28,24 +30,24 @@ set {
     data_in = 8'h29
   } expect (2) {
     data_out = 8'h31,
-	addr_out = 8'h4 // Error: wrong width!
+	addr_out = 4'h4
   } expect (5) {
-    addr_out = 4'b3 // Test for scheduling multiple events from one expect
+    addr_out = 4'b1110 // Test for scheduling multiple events from one expect
   }
 
 
 set {
     addr_in = 4'h7,
-    data_in = 8'h33
+    data_in = 8'h3
   } expect (2) {
     addr_out = 4'h9,
-    data_out = 8'h9
+    data_out = 8'd5
   }
 
 
 set {
-    addr_in = 4'hA,
-    data_in = 8'h70
+    addr_in = 4'o12,
+    data_in = 8'o340
   }
 
 drain // Go to end of scheduler's queue
@@ -55,12 +57,16 @@ set {
     data_in = 8'h74
   }
   expect (2) {
-    addr_out = 8'hD,
+    addr_out = 4'hD,
     data_out = 8'h76
   }
+
+set {
+    data_in = 8'h84
+  }
   expect (2) {
-    addr_out = 8'hD,
-    data_out = 8'h76
+    addr_out = 4'hD,
+    data_out = 8'h86
   }
 
 set {} // Inc the sim tick

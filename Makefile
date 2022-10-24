@@ -36,7 +36,7 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 run: all
-	$(BUILD_DIR)/$(BIN_NAME) test/test.vfl
+	$(BUILD_DIR)/$(BIN_NAME) test/test.vfl build/vf.dat build/tb_vf.v
 
 clean:
 	rm -rf $(BUILD_DIR)

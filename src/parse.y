@@ -23,6 +23,8 @@ static void _schedule_event(varval_t *, int, int);
 static event_t *_get_last_event();
 void _insert_xpcts(event_t *, varval_t *);
 void _insert_sets(event_t *, varval_t *);
+
+extern int wval;
 %}
 
 // Declarations (Optional type definitions)
@@ -180,7 +182,13 @@ varvalblk:
 varval:
     IDENT '=' VERNUM
     {
-        if (hashtable_contains_skey(sym_table, $1)) {
+        symbol_t *s = hashtable_sget(sym_table, $1);
+        if (s) {
+            if (s->width != wval) {
+                printf("ERROR: Mismatched vector width (%d != %d) on line %d\n",
+                       wval, s->width, linenum);
+                yyerror();
+            }
             $$ = malloc(sizeof(*$$));
             $$->var = $1;
             $$->val = $3;

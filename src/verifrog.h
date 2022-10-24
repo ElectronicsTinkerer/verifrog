@@ -28,5 +28,9 @@ extern char *tick_units;
 
 static void generate_schedule_file(FILE *);
 
+
+// Lookup tables
+
+
 #endif
 

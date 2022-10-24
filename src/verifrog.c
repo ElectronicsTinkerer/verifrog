@@ -118,7 +118,10 @@ static void generate_schedule_file(FILE *of) {
 				   v->var, v->val);
 			symbol_t *s = (symbol_t*)hashtable_sget(sym_table, v->var);
 			printf("    --> %d, %d\n", s->offset, s->width);
-			// TODO: set the characters in the bit vectors
+			
+			// Set the characters in the bit vectors
+			
+			// Free the var-val pair
 			vt = v->n;
 			varval_destroy(&v);
 			v = vt;
