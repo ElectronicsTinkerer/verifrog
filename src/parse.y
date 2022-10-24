@@ -42,7 +42,7 @@ void _insert_sets(event_t *, varval_t *);
 %token<str> IDENT
 %token<str> VERNUM
 %token TICK UNDEF ALWAYS SET EXPECT IMPLIES 
-%token EQ NEQ NET DRAIN ALIAS
+%token EQ NEQ INPUT OUTPUT DRAIN ALIAS
 
 %nterm start
 // %nterm condblk
@@ -55,19 +55,20 @@ start:
     {
         printf("DEBUG: Confuzing empty...\n");
     };
-    | start TICK INUM IDENT
+    | start TICK IDENT[cnet] INUM[time] IDENT[units]
     {
 
         if (tick_size) {
             printf("WARN: tick size redefined on line %d\n", linenum);
         }
-        tick_size = $3;
-        tick_units = $4;
+        clock_net = $cnet;
+        tick_size = $time;
+        tick_units = $units;
     };
-    | start NET IDENT INUM
+    | start INPUT IDENT INUM
     {
-        if (hashtable_contains_skey(sym_table, $3)) {
-            printf("WARN: multiple define net: '%s' on line %d [ignoring...]\n",
+        if (hashtable_contains_skey(input_table, $3)) {
+            printf("WARN: multiple define input net: '%s' on line %d [ignoring...]\n",
                    $3, linenum);
         } else {
             symbol_t *s = malloc(sizeof(*s));
@@ -78,37 +79,67 @@ start:
 
             s->sym = $3;
             s->width = $4;
-            hashtable_sput(sym_table, $3, s);
+            s->offset = input_offset;
+            hashtable_sput(input_table, $3, s);
+            input_offset += s->width;
         }
     };
-    | start ALIAS IDENT[new] IDENT[old]
+    | start OUTPUT IDENT INUM
     {
-        if (hashtable_contains_skey(sym_table, $3)) {
-            printf("WARN: multiple define net: '%s' on line %d [ignoring...]\n",
+        if (hashtable_contains_skey(output_table, $3)) {
+            printf("WARN: multiple define output net: '%s' on line %d [ignoring...]\n",
                    $3, linenum);
         } else {
-            symbol_t *s = (symbol_t*)hashtable_sget(sym_table, $old);
+            symbol_t *s = malloc(sizeof(*s));
             if (!s) {
-                printf("ERROR: Symbol not defined before alias! '%s'\n", $old);
+                printf("ERROR: could not allocate symbol! '%s'\n", $3);
                 yyerror();
             }
 
-            hashtable_sput(sym_table, $new, s);
+            s->sym = $3;
+            s->width = $4;
+            s->offset = output_offset;
+            hashtable_sput(output_table, $3, s);
+            output_offset += s->width;
         }
     };
+    // | start ALIAS IDENT[new] IDENT[old]
+    // {
+        // int i = hashtable_contains_skey(input_table, $new);
+        // int o = hashtable_contains_skey(output_table, $new);
+        // if (i || o) {
+            // printf("WARN: multiple define net: '%s' on line %d [ignoring...]\n",
+                   // $new, linenum);
+        // } else {
+            // symbol_t *s;
+            // if (i) {
+                // s = (symbol_t*)hashtable_sget(input_table, $old);
+            // } else {
+                // s = (symbol_t*)hashtable_sget(output_table, $old);
+            // }
+            
+            // if (!s) {
+                // printf("ERROR: Symbol not defined before alias! '%s'\n", $old);
+                // yyerror();
+            // }
+
+            // hashtable_sput(sym_table, $new, s);
+        // }
+    // };
     // | start ALWAYS '{' condblk '}'
       // IMPLIES '{' varvalblk '}'
     // {
         // printf("ALWAYS");
         // _schedule_event($
     // };
-    | start SET '{' varvalblk[vvset] '}'
+    | start SET {sym_table = input_table;} '{' varvalblk[vvset] '}'
     {
         max_tick = current_tick++;
         printf("SET (%d)\n", current_tick);
         _schedule_event($vvset, current_tick, 1);
     };
-    | start EXPECT '(' INUM[vvcycle] ')' '{' varvalblk[vvxpt] '}'
+    | start EXPECT {sym_table = output_table;}
+      '(' INUM[vvcycle] ')' '{' varvalblk[vvxpt] '}'
     {
         printf("EXPECT (%d)\n", current_tick + $vvcycle);
         _schedule_event($vvxpt, current_tick + $vvcycle, 0);

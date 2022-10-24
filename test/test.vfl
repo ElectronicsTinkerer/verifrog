@@ -1,15 +1,17 @@
 
-tick 100 ns
+tick clk 100 ns
 
-net clk 1
-// net clk 1 // WARNING
-net addr_in 4
-net addr_out 4
-net data_in 8
-net data_out 8
+// Direction is relative to the module under test.
+// (i.e., the same direction as the module's port
+//  declarations)
+input clk 1
+input addr_in 4
+output addr_out 4
+input data_in 8
+output data_out 8
 
-alias a_in addr_in
-alias d_in data_in
+// alias a_in addr_in
+// alias d_in data_in
 
 /*
 always { ! bus_en } => {
@@ -46,7 +48,7 @@ set {
     data_in = 8'h70
   }
 
-drain // Go to end of scheduler's stack
+drain // Go to end of scheduler's queue
 
 set {
     addr_in = 4'hB,
@@ -57,8 +59,8 @@ set {
     data_out = 8'h76
   }
   expect (2) {
-    a_in = 8'hD,
-    d_in = 8'h76
+    addr_out = 8'hD,
+    data_out = 8'h76
   }
 
 set {} // Inc the sim tick

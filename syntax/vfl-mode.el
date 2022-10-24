@@ -33,7 +33,7 @@
       (let* (
             ;; define several category of keywords
             (x-keywords '("tick" "drain" "alias"))
-            (x-types '("net"))
+            (x-types '("input" "output"))
             ;; (x-constants '("ACTIVE" "AGENT" "ALL_SIDES" "ATTACH_BACK"))
             (x-events '("@"))
             (x-functions '("always" "expect" "set"))
