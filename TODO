@@ -3,7 +3,6 @@
 ## TODO
 
 * Add generation of data file for verilog TB
-* Add proper freeing of memory (fix that *everything* is currently leaked...
 * Add TB generation itself
 
 ## Possible future improvements
@@ -16,5 +15,6 @@
 * Move expect out of set's grammar, allowing multiple time slots of expect for a single set operation
 * "drain" keyword which waits until the current event queue is empty before continuing on with tests
 * Add alias for signal names support
+* Add proper freeing of memory (fix that *everything* is currently leaked...)
 
 

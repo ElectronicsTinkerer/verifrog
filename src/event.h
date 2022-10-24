@@ -16,5 +16,7 @@ typedef struct event_t {
 	struct varval_t *xpcts;
 } event_t;
 
+void event_destroy(event_t **e);
+
 #endif
 

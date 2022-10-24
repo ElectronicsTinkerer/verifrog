@@ -14,5 +14,7 @@ typedef struct varval_t {
 	struct varval_t *n;
 } varval_t;
 
+void varval_destroy(varval_t **vv);
+
 #endif
 
