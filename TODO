@@ -2,7 +2,7 @@
 
 ## TODO
 
-* Display time and tick of errors
+< Nothing? >
 
 ## Possible future improvements
 
@@ -22,5 +22,6 @@
 * Add generation of data file for verilog TB
 * Add TB generation itself
 * Free symbol table
+* Display time and tick of errors
 
 
