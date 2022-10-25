@@ -32,7 +32,7 @@
 (setq vfl-font-lock-keywords
       (let* (
             ;; define several category of keywords
-            (x-keywords '("tick" "drain" "alias"))
+            (x-keywords '("tick" "drain" "alias" "module"))
             (x-types '("input" "output"))
             ;; (x-constants '("ACTIVE" "AGENT" "ALL_SIDES" "ATTACH_BACK"))
             (x-events '("@"))

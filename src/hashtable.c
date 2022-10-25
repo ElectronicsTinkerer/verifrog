@@ -686,7 +686,7 @@ hashtable_entry_t *hashtable_iterator_next(hashtable_itr_t * itr)
             {
                 hashtable_entry_t *returnNode = itr->currentNode;
                 itr->currentNode = itr->currentNode->next;
-                itr->foundElements++;
+                ++itr->foundElements;
                 return returnNode;
             }
             else

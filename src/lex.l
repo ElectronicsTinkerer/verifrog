@@ -144,6 +144,7 @@ input                               { PACC; return INPUT; };
 output                              { PACC; return OUTPUT; };
 drain                               { PACC; return DRAIN; };
 alias                               { PACC; return ALIAS; };
+module                              { PACC; return MODULE; };
 "@"                                 { PACC; return yytext[0]; };
 
 [A-Za-z_][0-9A-Za-z_]*              {

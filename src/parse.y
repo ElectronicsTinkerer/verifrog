@@ -44,7 +44,7 @@ extern int wval;
 %token<str> IDENT
 %token<str> VERNUM
 %token TICK UNDEF ALWAYS SET EXPECT IMPLIES 
-%token EQ NEQ INPUT OUTPUT DRAIN ALIAS
+%token EQ NEQ INPUT OUTPUT DRAIN ALIAS MODULE
 
 %nterm start
 // %nterm condblk
@@ -57,6 +57,15 @@ start:
     {
         printf("DEBUG: Confuzing empty...\n");
     };
+    | start MODULE IDENT[name]
+    {
+        if (module_name) {
+            printf("ERROR: multiple define module: '%s' on line %d\n",
+                   $name, linenum);
+            yyerror();
+        }
+        module_name = $name;
+    };
     | start TICK IDENT[cnet] INUM[time] IDENT[units]
     {
 
@@ -67,41 +76,41 @@ start:
         tick_size = $time;
         tick_units = $units;
     };
-    | start INPUT IDENT INUM
+    | start INPUT IDENT[net] INUM[width]
     {
-        if (hashtable_contains_skey(input_table, $3)) {
+        if (hashtable_contains_skey(input_table, $net)) {
             printf("WARN: multiple define input net: '%s' on line %d [ignoring...]\n",
-                   $3, linenum);
+                   $net, linenum);
         } else {
             symbol_t *s = malloc(sizeof(*s));
             if (!s) {
-                printf("ERROR: could not allocate symbol! '%s'\n", $3);
+                printf("ERROR: could not allocate symbol! '%s'\n", $net);
                 yyerror();
             }
 
-            s->sym = $3;
-            s->width = $4;
+            s->sym = $net;
+            s->width = $width;
             s->offset = input_offset;
-            hashtable_sput(input_table, $3, s);
+            hashtable_sput(input_table, $net, s);
             input_offset += s->width;
         }
     };
-    | start OUTPUT IDENT INUM
+    | start OUTPUT IDENT[net] INUM[width]
     {
-        if (hashtable_contains_skey(output_table, $3)) {
+        if (hashtable_contains_skey(output_table, $net)) {
             printf("WARN: multiple define output net: '%s' on line %d [ignoring...]\n",
-                   $3, linenum);
+                   $net, linenum);
         } else {
             symbol_t *s = malloc(sizeof(*s));
             if (!s) {
-                printf("ERROR: could not allocate symbol! '%s'\n", $3);
+                printf("ERROR: could not allocate symbol! '%s'\n", $net);
                 yyerror();
             }
 
-            s->sym = $3;
-            s->width = $4;
+            s->sym = $net;
+            s->width = $width;
             s->offset = output_offset;
-            hashtable_sput(output_table, $3, s);
+            hashtable_sput(output_table, $net, s);
             output_offset += s->width;
         }
     };

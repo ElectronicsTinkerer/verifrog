@@ -20,13 +20,14 @@ extern int max_tick;
 extern int input_offset;
 extern int output_offset;
 
+// Module information
+extern char *module_name;
+
 // TB ticks information relative
 // to design's clock
 extern char *clock_net;
 extern unsigned int tick_size;
 extern char *tick_units;
-
-static void generate_schedule_file(FILE *);
 
 
 // Lookup tables
