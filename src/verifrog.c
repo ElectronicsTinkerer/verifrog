@@ -316,7 +316,13 @@ void generate_tb_file(FILE *of) {
 	symbol_t *sym;
 	char delim;
 	int ot_empty = hashtable_is_empty(output_table);
-	
+
+	fprintf(of, "`timescale %d%s/%d%s\n",
+			tick_size/10,
+			tick_units,
+			tick_size/100,
+			tick_units
+		);
 	fprintf(of, "module tb_%s();\n", module_name);
 	fprintf(of, "    integer tick;\n");
 	fprintf(of, "    reg %s;\n", clock_net);
