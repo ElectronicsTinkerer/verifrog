@@ -118,7 +118,7 @@ int main ( int argc, char *argv[] )
 
 	// Free symbol table
 	hashtable_itr_t *i = hashtable_create_iterator(input_table);
-	symbol_t *s;
+	hashtable_entry_t *s;
 	
 	if (i) {
 		printf("WARN: Unable to create iterator to free input table\n");
@@ -126,12 +126,12 @@ int main ( int argc, char *argv[] )
 	} else {
 		s = hashtable_iterator_next(i);
 		while (s) {
-			free(s->sym);
+			free(((symbol_t*)(s->value))->sym);
 			// s is free'd in hash table destroy fn
 		}
 	}
 
-	hashtable_iterator_destroy(&i);
+	hashtable_iterator_free(&i);
 
 	i = hashtable_create_iterator(output_table);
 	
@@ -141,12 +141,12 @@ int main ( int argc, char *argv[] )
 	} else {
 		s = hashtable_iterator_next(i);
 		while (s) {
-			free(s->sym);
+			free(((symbol_t*)(s->value))->sym);
 			// s is free'd in hash table destroy fn
 		}
 	}
 
-	hashtable_iterator_destroy(&i);
+	hashtable_iterator_free(&i);
 
 	// Free hash tables themselves
 	hashtable_destroy(&input_table);
@@ -316,7 +316,7 @@ void generate_tb_file(FILE *of) {
 	int ot_empty = hashtable_is_empty(output_table);
 	
 	fprintf(of, "module tb_%s();\n", module_name);
-
+	fprintf(of, "    integer tick;\n");
 	fprintf(of, "    reg %s;\n", clock_net);
 	fprintf(of, "    reg [%d:0] raw_data;\n",
 			input_offset + (2 * output_offset) - 1);
@@ -440,7 +440,11 @@ void generate_tb_file(FILE *of) {
 "\
     initial begin\n\
         %s <= 1'b1;\n\
-        forever #%d %s <= ~%s;\n\
+        integer = -1;\n\
+        forever begin\n\
+			#%d %s <= ~%s;\n\
+            integer = integer + 1;\n\
+        end\n\
     end\n\
 ",
 			clock_net,
@@ -473,7 +477,7 @@ void generate_tb_file(FILE *of) {
 \n\
     always @(negedge %s) begin\n\
         if ((raw_data[%d:%d] & outputs) !== raw_data[%d:%d]) begin\n\
-            $display(\"ERROR: unexpected value!\");\n\
+            $display(\"ERROR: unexpected value! at tick %%d\", tick);\n\
             $display(\"\
 ",
 			dat_file,
