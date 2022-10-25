@@ -120,7 +120,7 @@ int main ( int argc, char *argv[] )
 	hashtable_itr_t *i = hashtable_create_iterator(input_table);
 	hashtable_entry_t *s;
 	
-	if (i) {
+	if (!i) {
 		printf("WARN: Unable to create iterator to free input table\n");
 		printf("      Leaking memory...\n");
 	} else {
@@ -128,6 +128,7 @@ int main ( int argc, char *argv[] )
 		while (s) {
 			free(((symbol_t*)(s->value))->sym);
 			// s is free'd in hash table destroy fn
+			s = hashtable_iterator_next(i);
 		}
 	}
 
@@ -135,7 +136,7 @@ int main ( int argc, char *argv[] )
 
 	i = hashtable_create_iterator(output_table);
 	
-	if (i) {
+	if (!i) {
 		printf("WARN: Unable to create iterator to free output table\n");
 		printf("      Leaking memory...\n");
 	} else {
@@ -143,6 +144,7 @@ int main ( int argc, char *argv[] )
 		while (s) {
 			free(((symbol_t*)(s->value))->sym);
 			// s is free'd in hash table destroy fn
+			s = hashtable_iterator_next(i);
 		}
 	}
 
