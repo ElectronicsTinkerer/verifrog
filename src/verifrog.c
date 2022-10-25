@@ -116,7 +116,41 @@ int main ( int argc, char *argv[] )
 		fclose(of);
     }
 
-	// TODO: Free symbol table
+	// Free symbol table
+	hashtable_itr_t *i = hashtable_create_iterator(input_table);
+	symbol_t *s;
+	
+	if (i) {
+		printf("WARN: Unable to create iterator to free input table\n");
+		printf("      Leaking memory...\n");
+	} else {
+		s = hashtable_iterator_next(i);
+		while (s) {
+			free(s->sym);
+			// s is free'd in hash table destroy fn
+		}
+	}
+
+	hashtable_iterator_destroy(&i);
+
+	i = hashtable_create_iterator(output_table);
+	
+	if (i) {
+		printf("WARN: Unable to create iterator to free output table\n");
+		printf("      Leaking memory...\n");
+	} else {
+		s = hashtable_iterator_next(i);
+		while (s) {
+			free(s->sym);
+			// s is free'd in hash table destroy fn
+		}
+	}
+
+	hashtable_iterator_destroy(&i);
+
+	// Free hash tables themselves
+	hashtable_destroy(&input_table);
+	hashtable_destroy(&output_table);
 
     exit ( EXIT_SUCCESS );
 }

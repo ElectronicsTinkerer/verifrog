@@ -2,7 +2,6 @@
 
 ## TODO
 
-* Free symbol table
 * Display time and tick of errors
 
 ## Possible future improvements
@@ -22,5 +21,6 @@
 * Add parsing of integer literals in set/expect blocks and conversion to binary string
 * Add generation of data file for verilog TB
 * Add TB generation itself
+* Free symbol table
 
 
