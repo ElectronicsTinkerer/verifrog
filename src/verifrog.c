@@ -442,10 +442,10 @@ void generate_tb_file(FILE *of) {
 "\
     initial begin\n\
         %s <= 1'b1;\n\
-        integer = -1;\n\
+        tick = -1;\n\
         forever begin\n\
 			#%d %s <= ~%s;\n\
-            integer = integer + 1;\n\
+            tick = tick + 1;\n\
         end\n\
     end\n\
 ",
