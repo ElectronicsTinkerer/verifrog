@@ -463,7 +463,7 @@ void generate_tb_file(FILE *of) {
     integer dat_file;\n\
     initial begin\n\
         dat_file = $fopen(\"%s\", \"r\");\n\
-        if (dat_file == `NULL) begin\n\
+        if (dat_file == 0) begin\n\
             $display(\"ERROR: Unable to open stimulus file\");\n\
             $finish();\n\
         end\n\
