@@ -488,7 +488,7 @@ void generate_tb_file(FILE *of) {
 \n\
     always @(posedge %s) begin\n\
         scan_handle = $fscanf(dat_file, \"%%b\\n\", raw_data);\n\
-        if ($feof(data_file)) begin\n\
+        if ($feof(dat_file)) begin\n\
             $display(\"DONE\");\n\
             $finish();\n\
         end\n\
