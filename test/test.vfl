@@ -1,6 +1,6 @@
 
 // Length of the FULL the clock period (50% duty cycle)
-tick clk 100 ns
+use tick clk 100 ns
 module bus_adder
 
 // Direction is relative to the module under test.

@@ -28,7 +28,7 @@ extern char *module_name;
 extern char *clock_net;
 extern unsigned int tick_size;
 extern char *tick_units;
-
+extern int use_clk_port;
 
 // Lookup tables
 

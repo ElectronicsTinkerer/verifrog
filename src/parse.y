@@ -2,6 +2,7 @@
 #include "varvalpair.h"
 #include "event.h"
 #include "symbol.h"
+#include "verifrog.h"
 }
 
 %{
@@ -11,7 +12,6 @@
 #include <string.h>
     
 #include "hashtable.h"
-#include "verifrog.h"
     // Redundant include for using yytoken_kind_t
 #include "parse.tab.h" 
 
@@ -45,6 +45,7 @@ extern int wval;
 %token<str> VERNUM
 %token TICK UNDEF ALWAYS SET EXPECT IMPLIES 
 %token EQ NEQ INPUT OUTPUT DRAIN ALIAS MODULE
+%token USE
 
 %nterm start
 // %nterm condblk
@@ -72,6 +73,18 @@ start:
         if (tick_size) {
             printf("WARN: tick size redefined on line %d\n", linenum);
         }
+        use_clk_port = 0;
+        clock_net = $cnet;
+        tick_size = $time;
+        tick_units = $units;
+    };
+    | start USE TICK IDENT[cnet] INUM[time] IDENT[units]
+    {
+        
+        if (tick_size) {
+            printf("WARN: tick size redefined on line %d\n", linenum);
+        }
+        use_clk_port = 1;
         clock_net = $cnet;
         tick_size = $time;
         tick_units = $units;

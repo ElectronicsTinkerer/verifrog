@@ -136,6 +136,7 @@ HEXDIG      [0-9A-Fa-f]
 "!="                                { PACC; return NEQ; };
 "=>"                                { PACC; return IMPLIES; };
 
+use                                 { PACC; return USE; };
 tick                                { PACC; return TICK; };
 always                              { PACC; return ALWAYS; };
 set                                 { PACC; return SET; };
