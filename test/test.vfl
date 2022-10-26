@@ -35,7 +35,8 @@ set {
     data_out = 8'h31,
 	addr_out = 4'h4
   } expect (5) {
-    addr_out = 4'b1110 // Test for scheduling multiple events from one expect
+    addr_out = 4'b1110, // Test for scheduling multiple events from one expect
+    data_out = 8'b0
   }
 
 

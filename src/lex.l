@@ -204,12 +204,19 @@ static int _parse_const(char **binstr, int *width)
     switch (*(++delim)) {
     case 'B':
     case 'b':
-        // printf("size: %d, yyleng: %d, delim: %d, yytext: %d, total: %d, delim: %c\n",
-               // size, yyleng, delim, yytext, yyleng - (delim - yytext), *delim);
-        if (size != yyleng - (delim + 1 - yytext)) {
-            return 1;
+        // Go from lsb to msb
+        p = yytext + yyleng;
+        i = size - 1;
+        while (--p != delim) {
+            t = (*p) - '0'; // Get raw value
+            if (i < 0 && (t & 0x1)) {
+                return 1;
+            } else if (i >= 0) {
+                (*binstr)[i] = '0' | (t & 0x1);
+            }
+            --i;
+            t >>= 1;
         }
-        strncpy(*binstr, delim+1, size + 1);
         break;
 
     case 'O':

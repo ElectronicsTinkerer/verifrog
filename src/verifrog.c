@@ -466,11 +466,13 @@ void generate_tb_file(FILE *of) {
     initial begin\n\
         __vfliclk <= 1'b0;\n\
         %s <= 1'b0;\n\
-        tick = -1;\n\
+        tick = 0;\n\
         forever begin\n\
             #%d __vfliclk <= ~__vfliclk;\n\
 			#%d %s <= __vfliclk;\n\
-            tick = tick + 1;\n\
+            if (__vfliclk == 1'b1) begin\n\
+                tick = tick + 1;\n\
+            end\n\
         end\n\
     end\n\
 ",
