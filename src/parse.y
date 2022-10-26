@@ -260,9 +260,9 @@ static const char *get_token_name(yysymbol_kind_t sym) {
 static void _schedule_event(varval_t *vvl, int tick, int sched_set) {
 
     // Don't schedule NULL events
-    if (!vvl) {
-        return;
-    }
+    // if (!vvl) {
+        // return;
+    // }
     
     event_t *e;
     event_t *m = NULL;
@@ -285,7 +285,7 @@ static void _schedule_event(varval_t *vvl, int tick, int sched_set) {
         m->xpcts = NULL;
     }
 
-    // If no events in list, create a new one
+    // If no events in list or none found, create a new one
     if (!e) {
         printf("INFO: creating new tick (sets)\n");
         if (!sch_head) {

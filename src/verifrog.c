@@ -502,7 +502,7 @@ void generate_tb_file(FILE *of) {
         end\n\
 \n\
         if ((raw_data[%d:%d] & outputs) !== raw_data[%d:%d]) begin\n\
-            $display(\"ERROR: unexpected value! at tick %%d\", tick);\n\
+            $display(\"ERROR: unexpected value! at tick %%0d\", tick);\n\
             $display(\"\
 ",
 			dat_file,
@@ -590,6 +590,7 @@ void generate_tb_file(FILE *of) {
 
 	hashtable_iterator_free(&i);
 
+	// Outputs
 	i = hashtable_create_iterator(output_table);
 
 	if (!i) {
@@ -613,7 +614,67 @@ void generate_tb_file(FILE *of) {
 	}
 
 	hashtable_iterator_free(&i);
+
+	fprintf(of, "            );\n");
 	
+	//////////////////////////
+	//    Expected Values   // 
+	//////////////////////////
+	
+	// Expected values
+	fprintf(of, "            $display(\"EXPECTED: ");
+	
+	i = hashtable_create_iterator(output_table);
+
+	if (!i) {
+		printf("ERROR: unable to set up output expected status iterator!\n");
+		yyerror();
+	}
+
+	while (hashtable_iterator_has_next(i)) {
+		e = hashtable_iterator_next(i);
+		sym = (symbol_t*)e->value;
+
+		if (hashtable_iterator_has_next(i)) {
+			delim = ',';
+		} else {
+			delim = ' ';
+		}
+		fprintf(of, "%s: %%b%c ",
+				sym->sym,
+				delim
+			);
+	}
+
+	hashtable_iterator_free(&i);
+	
+	fprintf(of, "\",\n");
+	
+	i = hashtable_create_iterator(output_table);
+
+	if (!i) {
+		printf("ERROR: unable to set up output net iterator!\n");
+		yyerror();
+	}
+
+	while (hashtable_iterator_has_next(i)) {
+		e = hashtable_iterator_next(i);
+		sym = (symbol_t*)e->value;
+
+		if (hashtable_iterator_has_next(i)) {
+			delim = ',';
+		} else {
+			delim = ' ';
+		}
+		fprintf(of, "                raw_data[%d:%d]%c\n",
+				input_offset + sym->offset + sym->width - 1,
+				input_offset + sym->offset,
+				delim
+			);
+	}
+
+	hashtable_iterator_free(&i);
+
 	// End the stimulus check
 	fprintf(of,
 "\

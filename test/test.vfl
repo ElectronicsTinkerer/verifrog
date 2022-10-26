@@ -72,5 +72,8 @@ set {
     data_out = 8'h86
   }
 
+drain
+set {} // Inc the sim tick
+set {} // Inc the sim tick
 set {} // Inc the sim tick
 
