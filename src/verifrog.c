@@ -328,6 +328,7 @@ void generate_tb_file(FILE *of) {
 	fprintf(of, "    integer tick;\n");
 	fprintf(of, "    integer dat_file;\n");
 	fprintf(of, "    integer scan_handle;\n");
+	fprintf(of, "    reg __vfliclk;\n");
 	fprintf(of, "    reg %s;\n", clock_net);
 	fprintf(of, "    reg [%d:0] raw_data;\n",
 			input_offset + (2 * output_offset) - 1);
@@ -459,17 +460,20 @@ void generate_tb_file(FILE *of) {
 	fprintf(of,
 "\
     initial begin\n\
-        %s <= 1'b1;\n\
+        __vfliclk <= 1'b0;\n\
+        %s <= 1'b0;\n\
         tick = -1;\n\
         forever begin\n\
-			#%d %s <= ~%s;\n\
+            #%d __vfliclk <= ~__vfliclk;\n\
+			#%d %s <= __vfliclk;\n\
             tick = tick + 1;\n\
         end\n\
     end\n\
 ",
 			clock_net,
-			tick_size/2,
-			clock_net, clock_net
+			tick_size/4,
+			tick_size/4,
+			clock_net
 		);
 
 	//////////////////////////
@@ -486,7 +490,7 @@ void generate_tb_file(FILE *of) {
         end\n\
     end\n\
 \n\
-    always @(posedge %s) begin\n\
+    always @(posedge __vfliclk) begin\n\
         scan_handle = $fscanf(dat_file, \"%%b\\n\", raw_data);\n\
         if ($feof(dat_file)) begin\n\
             $display(\"DONE\");\n\
@@ -500,7 +504,6 @@ void generate_tb_file(FILE *of) {
             $display(\"\
 ",
 			dat_file,
-			clock_net,
 			clock_net,
 			input_offset + (output_offset * 2) - 1,
 			input_offset + output_offset,
