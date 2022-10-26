@@ -10,6 +10,7 @@
   ` var = (other_sig + 4'b1101 >> 2) `
 * Convert flex/bison to use reentrant scheme instead of global vars
 * Generic/parameter definitions
+* Add CLI flag to select between continuing on error and $stop()ing
 
 ## TO-DOne
 

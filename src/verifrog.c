@@ -500,15 +500,6 @@ void generate_tb_file(FILE *of) {
 \n\
     always @(posedge __vfliclk) begin\n\
         __scan_handle = $fscanf(__dat_file, \"%%b\\n\", __raw_data);\n\
-        if ($feof(__dat_file)) begin\n\
-            if (__error_count == 0) begin\n\
-                $display(\">>> TESTING COMPLETE - PASS <<<\");\n\
-            end\n\
-            else begin\n\
-                $display(\">>> TESTING COMPLETE - FAIL <<<\");\n\
-            end\n\
-            $finish();\n\
-        end\n\
 \n\
         if ((__raw_data[%d:%d] & __outputs) !== __raw_data[%d:%d]) begin\n\
             __error_count = __error_count + 1;\n\
@@ -690,6 +681,16 @@ void generate_tb_file(FILE *of) {
 "\
             );\n\
             // $stop();\n\
+        end\n\
+\n\
+        if ($feof(__dat_file)) begin\n\
+            if (__error_count == 0) begin\n\
+                $display(\">>> TESTING COMPLETE - PASS <<<\");\n\
+            end\n\
+            else begin\n\
+                $display(\">>> TESTING COMPLETE - FAIL <<<\");\n\
+            end\n\
+            $finish();\n\
         end\n\
     end\n\
 "
