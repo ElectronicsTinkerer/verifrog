@@ -315,6 +315,7 @@ void generate_tb_file(FILE *of) {
 	hashtable_entry_t *e;
 	symbol_t *sym;
 	char delim;
+	int it_empty = hashtable_is_empty(input_table);
 	int ot_empty = hashtable_is_empty(output_table);
 
 	fprintf(of, "`timescale %d%s/%d%s\n",
@@ -325,6 +326,8 @@ void generate_tb_file(FILE *of) {
 		);
 	fprintf(of, "module tb_%s();\n", module_name);
 	fprintf(of, "    integer tick;\n");
+	fprintf(of, "    integer dat_file;\n");
+	fprintf(of, "    integer scan_handle;\n");
 	fprintf(of, "    reg %s;\n", clock_net);
 	fprintf(of, "    reg [%d:0] raw_data;\n",
 			input_offset + (2 * output_offset) - 1);
@@ -380,8 +383,17 @@ void generate_tb_file(FILE *of) {
 
 	hashtable_iterator_free(&i);
 
+	//////////////////////////
+	//   UNIT UNDER TEST    // 
+	//////////////////////////
+
 	// MODULE (UUT)
 	fprintf(of, "    %s UUT(\n", module_name);
+	fprintf(of, "        .%s(%s)%c\n",
+			clock_net,
+			clock_net,
+			(ot_empty && it_empty) ? ' ' : ','
+		);
 
 	// INPUTS
 	i = hashtable_create_iterator(input_table);
@@ -466,7 +478,6 @@ void generate_tb_file(FILE *of) {
 
 	fprintf(of,
 "\
-    integer dat_file;\n\
     initial begin\n\
         dat_file = $fopen(\"%s\", \"r\");\n\
         if (dat_file == 0) begin\n\
@@ -476,7 +487,7 @@ void generate_tb_file(FILE *of) {
     end\n\
 \n\
     always @(posedge %s) begin\n\
-        $fscanf(dat_file, \"%%b\\n\", raw_data);\n\
+        scan_handle = $fscanf(dat_file, \"%%b\\n\", raw_data);\n\
         if ($feof(data_file)) begin\n\
             $display(\"DONE\");\n\
             $finish();\n\
