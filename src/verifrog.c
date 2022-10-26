@@ -180,6 +180,7 @@ static void generate_schedule_file(FILE *of) {
 	char *output_mask = malloc((sizeof(*output_mask) * output_offset) + 1);
 	input_bv[input_offset]   = '\0';
 	output_bv[output_offset] = '\0';
+	memset(input_bv, '0', input_offset);
 	
 	// Go through all events and output them to the file
 	varval_t *v, *vt;
@@ -199,7 +200,8 @@ static void generate_schedule_file(FILE *of) {
 			printf("    --> %d, %d\n", s->offset, s->width);
 			
 			// Set the characters in the bit vectors
-			memcpy(input_bv + s->offset, v->val, s->width);
+			memcpy(input_bv + input_offset - (s->width + s->offset),
+				   v->val, s->width);
 			
 			// Free the var-val pair and get the next in the list
 			vt = v->n;
@@ -213,10 +215,12 @@ static void generate_schedule_file(FILE *of) {
 			s = (symbol_t*)hashtable_sget(output_table, v->var);
 			
 			// Set the characters in the bit vectors
-			memcpy(output_bv + s->offset, v->val, s->width);
+			memcpy(output_bv + output_offset - (s->width + s->offset),
+				   v->val, s->width);
 			
 			// Set the bits in the expect mask
-			memset(output_mask + s->offset, '1', s->width);
+			memset(output_mask + output_offset - (s->width + s->offset),
+				   '1', s->width);
 
 			// Free the var-val pair and get the next in the list
 			vt = v->n;
@@ -224,7 +228,6 @@ static void generate_schedule_file(FILE *of) {
 			v = vt;
 		}
 
-		printf("IBV: %s\n", input_bv);
 		fprintf(of, "%s_%s_%s\n", output_mask, output_bv, input_bv);
 
 		// Free the event and get the next
