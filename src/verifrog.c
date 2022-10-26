@@ -224,7 +224,8 @@ static void generate_schedule_file(FILE *of) {
 			v = vt;
 		}
 
-		fprintf(of, "%s_%s_%s\n", input_bv, output_bv, output_mask);
+		printf("IBV: %s\n", input_bv);
+		fprintf(of, "%s_%s_%s\n", output_mask, output_bv, input_bv);
 
 		// Free the event and get the next
 		et = sch_head->n;
@@ -496,15 +497,12 @@ void generate_tb_file(FILE *of) {
             $display(\"DONE\");\n\
             $finish();\n\
         end\n\
-    end\n\
 \n\
-    always @(negedge %s) begin\n\
         if ((raw_data[%d:%d] & outputs) !== raw_data[%d:%d]) begin\n\
             $display(\"ERROR: unexpected value! at tick %%d\", tick);\n\
             $display(\"\
 ",
 			dat_file,
-			clock_net,
 			input_offset + (output_offset * 2) - 1,
 			input_offset + output_offset,
 			input_offset + output_offset - 1,
