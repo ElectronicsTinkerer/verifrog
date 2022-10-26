@@ -329,16 +329,17 @@ void generate_tb_file(FILE *of) {
 			tick_units
 		);
 	fprintf(of, "module tb_%s();\n", module_name);
-	fprintf(of, "    integer tick;\n");
-	fprintf(of, "    integer dat_file;\n");
-	fprintf(of, "    integer scan_handle;\n");
+	fprintf(of, "    integer __tick;\n");
+	fprintf(of, "    integer __dat_file;\n");
+	fprintf(of, "    integer __scan_handle;\n");
+	fprintf(of, "    integer __error_count;\n");
 	fprintf(of, "    reg __vfliclk;\n");
 	fprintf(of, "    reg %s;\n", clock_net);
-	fprintf(of, "    reg [%d:0] raw_data;\n",
+	fprintf(of, "    reg [%d:0] __raw_data;\n",
 			input_offset + (2 * output_offset) - 1);
-	fprintf(of, "    wire [%d:0] inputs;\n", input_offset - 1);
-	fprintf(of, "    wire [%d:0] outputs;\n", output_offset - 1);
-	fprintf(of, "    assign inputs = raw_data[%d:%d];\n",
+	fprintf(of, "    wire [%d:0] __inputs;\n", input_offset - 1);
+	fprintf(of, "    wire [%d:0] __outputs;\n", output_offset - 1);
+	fprintf(of, "    assign __inputs = __raw_data[%d:%d];\n",
 			input_offset - 1,
 			0
 		);
@@ -355,7 +356,7 @@ void generate_tb_file(FILE *of) {
 	while (hashtable_iterator_has_next(i)) {
 		e = hashtable_iterator_next(i);
 		sym = (symbol_t*)e->value;
-		fprintf(of, "    wire [%d:0] %s;\n    assign %s = inputs[%d:%d];\n",
+		fprintf(of, "    wire [%d:0] %s;\n    assign %s = __inputs[%d:%d];\n",
 				sym->width - 1,
 				sym->sym,
 				sym->sym,
@@ -377,7 +378,7 @@ void generate_tb_file(FILE *of) {
 	while (hashtable_iterator_has_next(i)) {
 		e = hashtable_iterator_next(i);
 		sym = (symbol_t*)e->value;
-		fprintf(of, "    wire [%d:0] %s;\n    assign outputs[%d:%d] = %s;\n",
+		fprintf(of, "    wire [%d:0] %s;\n    assign __outputs[%d:%d] = %s;\n",
 				sym->width - 1,
 				sym->sym,
 				sym->offset + sym->width - 1,
@@ -417,7 +418,7 @@ void generate_tb_file(FILE *of) {
 		} else {
 			delim = ' ';
 		}
-		fprintf(of, "        .%s(inputs[%d:%d])%c\n",
+		fprintf(of, "        .%s(__inputs[%d:%d])%c\n",
 				sym->sym,
 				sym->offset + sym->width - 1,
 				sym->offset,
@@ -466,12 +467,13 @@ void generate_tb_file(FILE *of) {
     initial begin\n\
         __vfliclk <= 1'b0;\n\
         %s <= 1'b0;\n\
-        tick = 0;\n\
+        __tick = 0;\n\
+        __error_count = 0;\n\
         forever begin\n\
             #%d __vfliclk <= ~__vfliclk;\n\
 			#%d %s <= __vfliclk;\n\
             if (__vfliclk == 1'b1) begin\n\
-                tick = tick + 1;\n\
+                __tick = __tick + 1;\n\
             end\n\
         end\n\
     end\n\
@@ -489,22 +491,28 @@ void generate_tb_file(FILE *of) {
 	fprintf(of,
 "\
     initial begin\n\
-        dat_file = $fopen(\"%s\", \"r\");\n\
-        if (dat_file == 0) begin\n\
+        __dat_file = $fopen(\"%s\", \"r\");\n\
+        if (__dat_file == 0) begin\n\
             $display(\"ERROR: Unable to open stimulus file\");\n\
             $finish();\n\
         end\n\
     end\n\
 \n\
     always @(posedge __vfliclk) begin\n\
-        scan_handle = $fscanf(dat_file, \"%%b\\n\", raw_data);\n\
-        if ($feof(dat_file)) begin\n\
-            $display(\"DONE\");\n\
+        __scan_handle = $fscanf(__dat_file, \"%%b\\n\", __raw_data);\n\
+        if ($feof(__dat_file)) begin\n\
+            if (__error_count == 0) begin\n\
+                $display(\">>> TESTING COMPLETE - PASS <<<\");\n\
+            end\n\
+            else begin\n\
+                $display(\">>> TESTING COMPLETE - FAIL <<<\");\n\
+            end\n\
             $finish();\n\
         end\n\
 \n\
-        if ((raw_data[%d:%d] & outputs) !== raw_data[%d:%d]) begin\n\
-            $display(\"ERROR: unexpected value! at tick %%0d\", tick);\n\
+        if ((__raw_data[%d:%d] & __outputs) !== __raw_data[%d:%d]) begin\n\
+            __error_count = __error_count + 1;\n\
+            $display(\"ERROR: unexpected value! at tick %%0d\", __tick);\n\
             $display(\"\
 ",
 			dat_file,
@@ -668,7 +676,7 @@ void generate_tb_file(FILE *of) {
 		} else {
 			delim = ' ';
 		}
-		fprintf(of, "                raw_data[%d:%d]%c\n",
+		fprintf(of, "                __raw_data[%d:%d]%c\n",
 				input_offset + sym->offset + sym->width - 1,
 				input_offset + sym->offset,
 				delim
@@ -681,7 +689,7 @@ void generate_tb_file(FILE *of) {
 	fprintf(of,
 "\
             );\n\
-            $finish();\n\
+            // $stop();\n\
         end\n\
     end\n\
 "
