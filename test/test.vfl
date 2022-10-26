@@ -1,7 +1,6 @@
 
 // Length of the FULL the clock period (50% duty cycle)
 tick clk 100 ns
-
 module bus_adder
 
 // Direction is relative to the module under test.
@@ -29,49 +28,49 @@ always { ! bus_en } => {
 // Second, it increments the simulation tick. It is
 // the only way to increment the simulation tick.
 set {
-    addr_in = 4'h3,
-    data_in = 8'h29
+    addr_in = 4'h3;
+    data_in = 8'h29;
+} expect (2) {
+    data_out = 8'h31;
+    addr_out = 4'h4;
+} expect (5) {
+    addr_out = 4'b1110; // Test for scheduling multiple events from one expect
+    data_out = 8'b0;
+}
+
+
+set {
+    addr_in = 4'h7;
+    data_in = 8'h3;
   } expect (2) {
-    data_out = 8'h31,
-	addr_out = 4'h4
-  } expect (5) {
-    addr_out = 4'b1110, // Test for scheduling multiple events from one expect
-    data_out = 8'b0
+    addr_out = 4'h9;
+    data_out = 8'd5;
   }
 
 
 set {
-    addr_in = 4'h7,
-    data_in = 8'h3
-  } expect (2) {
-    addr_out = 4'h9,
-    data_out = 8'd5
-  }
-
-
-set {
-    addr_in = 4'o12,
-    data_in = 8'o340
-  }
+    addr_in = 4'o12;
+    data_in = 8'o340;
+}
 
 drain // Go to end of scheduler's queue
 
 set {
-    addr_in = 4'hB,
-    data_in = 8'h74
-  }
-  expect (2) {
-    addr_out = 4'hD,
-    data_out = 8'h76
-  }
+    addr_in = 4'hB;
+    data_in = 8'h74;
+}
+expect (2) {
+    addr_out = 4'hD;
+    data_out = 8'h76;
+}
 
 set {
-    data_in = 8'h84
-  }
-  expect (2) {
-    addr_out = 4'hD,
-    data_out = 8'h86
-  }
+    data_in = 8'h84;
+}
+expect (2) {
+    addr_out = 4'hD;
+    data_out = 8'h86;
+}
 
 drain
 set {} // Inc the sim tick

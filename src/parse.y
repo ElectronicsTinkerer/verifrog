@@ -173,14 +173,7 @@ varvalblk:
     {
         $$ = NULL;
     };
-    | varvalblk varval
-    {
-        $$ = $2;
-        if ($1) {
-            $2->n = $1;
-        }
-    };
-    | varvalblk varval ','
+    | varvalblk varval ';'
     {
         $$ = $2;
         if ($1) {
