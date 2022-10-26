@@ -19,6 +19,7 @@ extern int current_tick;
 extern int max_tick;
 extern int input_offset;
 extern int output_offset;
+extern literal_t *literals;
 
 // Module information
 extern char *module_name;

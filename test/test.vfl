@@ -17,6 +17,15 @@ output data_out 8
 // alias a_in addr_in
 // alias d_in data_in
 
+// Literal inclusion into the tb directly
+%{{
+     //  there's text in here!
+     always @(posedge clk) begin
+         foo <= 48'h39048730;
+         end
+     end
+%}}
+
 /*
 always { ! bus_en } => {
   mem_rd = 1'b0

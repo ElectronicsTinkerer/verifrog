@@ -2,6 +2,7 @@
 #include "varvalpair.h"
 #include "event.h"
 #include "symbol.h"
+#include "literal.h"
 #include "verifrog.h"
 }
 
@@ -34,6 +35,7 @@ extern int wval;
     char *str;
     int ival;
     varval_t *vv;
+    literal_t *lit;
 }
 
 // Add args to yyparse and yylex
@@ -41,11 +43,12 @@ extern int wval;
 
 // Token defs
 %token<ival> INUM
-%token<str> IDENT
-%token<str> VERNUM
+%token<str> IDENT VERNUM
+%token<lit> LITERAL
 %token TICK UNDEF ALWAYS SET EXPECT IMPLIES 
 %token EQ NEQ INPUT OUTPUT DRAIN ALIAS MODULE
 %token USE
+
 
 %nterm start
 // %nterm condblk
@@ -57,6 +60,19 @@ start:
     %empty
     {
         printf("DEBUG: Confuzing empty...\n");
+    };
+    | start LITERAL
+    {
+        // Add literal to list of literals
+        literal_t *l = literals;
+        if (!l) {
+            literals = $2;
+        } else {
+            while (l && l->n) {
+                l = l->n;
+            }
+            l->n = $2;
+        }
     };
     | start MODULE IDENT[name]
     {

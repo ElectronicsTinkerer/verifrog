@@ -10,6 +10,7 @@
 #include <time.h>
 
 #include "hashtable.h"
+#include "literal.h"
 #include "verifrog.h"
 #include "varvalpair.h"
 #include "event.h"
@@ -27,8 +28,8 @@ int current_tick = -1;
 int max_tick = 0;
 int input_offset = 0;
 int output_offset = 0;
-
 char *module_name = NULL;
+literal_t *literals = NULL;
 
 char *clock_net = NULL;
 unsigned int tick_size = 0;
@@ -389,6 +390,22 @@ void generate_tb_file(FILE *of) {
     }
 
     hashtable_iterator_free(&i);
+
+
+    //////////////////////////
+    //  LITERAL INCLUSIONS  // 
+    //////////////////////////
+
+	literal_t *l;
+	while (literals) {
+		l = literals->n;
+		fprintf(of, "// LITERAL TEXT BEGIN\n%s\n//LITERAL TEXT END\n",
+				literals->text);
+		free(literals->text);
+		free(literals);
+		literals = l;
+	}
+
 
     //////////////////////////
     //   UNIT UNDER TEST    // 

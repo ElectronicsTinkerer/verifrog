@@ -10,6 +10,7 @@
 
 #include "hashtable.h"
 #include "event.h"
+#include "literal.h"
 #include "verifrog.h"
 #include "varvalpair.h"
 #include "parse.tab.h"
@@ -38,11 +39,51 @@ BINDIG      [0-1]
 HEXDIG      [0-9A-Fa-f]
 
 /* ******************* STATES ******************** */
-
+%x LITER
 
 
 /* ******************** RULES ******************** */
 %%
+<LITER>\n                           {
+    linenum += 1;
+    (yylval.lit)->text[(yylval.lit)->index++] = *yytext;
+
+    if ((yylval.lit)->index == 2048) {
+        printf("ERROR: literal too long on line %d\n", linenum);
+        yyerror();
+    }
+};
+<LITER>.                            {
+    (yylval.lit)->text[(yylval.lit)->index++] = *yytext;
+
+    if ((yylval.lit)->index == 2048) {
+        printf("ERROR: literal too long on line %d\n", linenum);
+        yyerror();
+    }
+};
+<LITER>"%}}"                        {
+    // Terminate the string
+    (yylval.lit)->text[(yylval.lit)->index] = '\0';
+    printf("LITERAL: %s\n", (yylval.lit)->text);
+    yy_pop_state();
+    return LITERAL;
+};
+"%{{"                               {
+    PACC;
+    yy_push_state(LITER);
+    yylval.lit = malloc(sizeof(*(yylval.lit)));
+    
+    if (!(yylval.lit)) {
+        printf("ERROR: Unable to alloc literal on line %d\n", linenum);
+        yyerror();
+    }
+    (yylval.lit)->index = 0;
+    (yylval.lit)->text = malloc(sizeof(*((yylval.lit)->text)) * 2048); // Large buffer?
+    if (!((yylval.lit)->text)) {
+        printf("ERROR: Unable to alloc literal text on line %d\n", linenum);
+        yyerror();
+    }
+};
 "/*"                                comment_level += 1;
 "*/"                                {
     comment_level -= 1;
@@ -52,9 +93,8 @@ HEXDIG      [0-9A-Fa-f]
         exit(-1);
     }
 };
-\"[.\n\r]+\"                        { PACC; printf("STRING: %s\n", yytext); };
 \/\/.*                              //printf("{COMMENT}");
-\n                                  linenum += 1;
+\n                                  { linenum += 1; };
 
 ";"                                 { PACC; return yytext[0]; };
 ","                                 { PACC; return yytext[0]; };
