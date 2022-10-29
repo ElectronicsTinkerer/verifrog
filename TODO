@@ -2,7 +2,7 @@
 
 ## TODO
 
-< Nothing? >
+< nothing? >
 
 ## Possible future improvements
 
@@ -11,6 +11,8 @@
 * Convert flex/bison to use reentrant scheme instead of global vars
 * Generic/parameter definitions
 * Add CLI flag to select between continuing on error and $stop()ing
+* INIT block to set all signals before clock??
+* Add "stopon" command that waits for a certain bit pattern and stop()s the sim at that
 
 ## TO-DOne
 

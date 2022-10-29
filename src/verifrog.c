@@ -188,54 +188,61 @@ static void generate_schedule_file(FILE *of) {
     varval_t *v, *vt;
     event_t *et;
     symbol_t *s;
+    int tick = 0;
     while(sch_head) {
+
         // Reset the expect and mask vectors
         memset(output_bv, '0', output_offset);
         memset(output_mask, '0', output_offset);
+
+        // Needed so that empty ticks still are generated
+        if (tick == sch_head->tick) {   
         
-        printf("SCHED: @ %d ticks\n", sch_head->tick);
-        v = sch_head->sets;
-        while (v) {
-            printf("  S - %s = %s;\n",
-                   v->var, v->val);
-            s = (symbol_t*)hashtable_sget(input_table, v->var);
-            printf("    --> %d, %d\n", s->offset, s->width);
+            printf("SCHED: @ %d ticks\n", sch_head->tick);
+            v = sch_head->sets;
+            while (v) {
+                printf("  S - %s = %s;\n",
+                       v->var, v->val);
+                s = (symbol_t*)hashtable_sget(input_table, v->var);
+                printf("    --> %d, %d\n", s->offset, s->width);
             
-            // Set the characters in the bit vectors
-            memcpy(input_bv + input_offset - (s->width + s->offset),
-                   v->val, s->width);
+                // Set the characters in the bit vectors
+                memcpy(input_bv + input_offset - (s->width + s->offset),
+                       v->val, s->width);
             
-            // Free the var-val pair and get the next in the list
-            vt = v->n;
-            varval_destroy(&v);
-            v = vt;
-        }
-        v = sch_head->xpcts;
-        while (v) {
-            printf("  E - %s = %s;\n",
-                   v->var, v->val);
-            s = (symbol_t*)hashtable_sget(output_table, v->var);
+                // Free the var-val pair and get the next in the list
+                vt = v->n;
+                varval_destroy(&v);
+                v = vt;
+            }
+            v = sch_head->xpcts;
+            while (v) {
+                printf("  E - %s = %s;\n",
+                       v->var, v->val);
+                s = (symbol_t*)hashtable_sget(output_table, v->var);
             
-            // Set the characters in the bit vectors
-            memcpy(output_bv + output_offset - (s->width + s->offset),
-                   v->val, s->width);
+                // Set the characters in the bit vectors
+                memcpy(output_bv + output_offset - (s->width + s->offset),
+                       v->val, s->width);
             
-            // Set the bits in the expect mask
-            memset(output_mask + output_offset - (s->width + s->offset),
-                   '1', s->width);
+                // Set the bits in the expect mask
+                memset(output_mask + output_offset - (s->width + s->offset),
+                       '1', s->width);
 
-            // Free the var-val pair and get the next in the list
-            vt = v->n;
-            varval_destroy(&v);
-            v = vt;
-        }
+                // Free the var-val pair and get the next in the list
+                vt = v->n;
+                varval_destroy(&v);
+                v = vt;
+            }
 
+            // Free the event and get the next
+            et = sch_head->n;
+            event_destroy(&sch_head);
+            sch_head = et;
+        }
         fprintf(of, "%s_%s_%s\n", output_mask, output_bv, input_bv);
 
-        // Free the event and get the next
-        et = sch_head->n;
-        event_destroy(&sch_head);
-        sch_head = et;
+        ++tick;
     }
 }
 
@@ -396,15 +403,15 @@ void generate_tb_file(FILE *of) {
     //  LITERAL INCLUSIONS  // 
     //////////////////////////
 
-	literal_t *l;
-	while (literals) {
-		l = literals->n;
-		fprintf(of, "// LITERAL TEXT BEGIN\n%s\n//LITERAL TEXT END\n",
-				literals->text);
-		free(literals->text);
-		free(literals);
-		literals = l;
-	}
+    literal_t *l;
+    while (literals) {
+        l = literals->n;
+        fprintf(of, "// LITERAL TEXT BEGIN\n%s\n//LITERAL TEXT END\n",
+                literals->text);
+        free(literals->text);
+        free(literals);
+        literals = l;
+    }
 
 
     //////////////////////////
