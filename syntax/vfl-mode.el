@@ -24,6 +24,8 @@
 ;; 2) Add the following line to your EMACS startup file:
 ;;    (require 'vfl-mode)
 ;; 3) Reload your EMACS config
+;;
+;; You may need to manually run M-x vfl-mode RET the first time you open a file
 
 ;;; Code:
 
@@ -32,7 +34,7 @@
 (setq vfl-font-lock-keywords
       (let* (
             ;; define several category of keywords
-            (x-keywords '("tick" "drain" "alias" "module"))
+            (x-keywords '("use" "tick" "drain" "alias" "module"))
             (x-types '("input" "output"))
             ;; (x-constants '("ACTIVE" "AGENT" "ALL_SIDES" "ATTACH_BACK"))
             (x-events '("@"))
@@ -60,7 +62,23 @@
   "Major mode for editing VFL (VeriFrog test bench description Language)…"
 
   ;; code for syntax highlighting
-  (setq font-lock-defaults '((vfl-font-lock-keywords))))
+  (setq font-lock-defaults '((vfl-font-lock-keywords)))
+
+  ;; Indentation
+  (setq c-style-alist
+        (append '(("VFL"
+                   (c-basic-offset . 2)
+                   (c-comment-only-line-offset . 0)
+                   (c-hanging-braces-alist
+                    (substatement-open before after))
+                   (c-offsets-alist
+                    (topmost-intro-cont . 0)
+                    (topmost-intro . 0)
+                    (defun-block-intro . +)
+                    (statement-cont . 0)
+                    (inline-close . 2)
+                    (defun-close . 2))))
+                c-style-alist)))
 
 ;; add the mode to the `features' list
 (provide 'vfl-mode)

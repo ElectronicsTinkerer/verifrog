@@ -13,6 +13,7 @@
 * Add CLI flag to select between continuing on error and $stop()ing
 * INIT block to set all signals before clock??
 * Add "stopon" command that waits for a certain bit pattern and stop()s the sim at that
+* Print 'x' for values that expects don't care about when printing a failed case
 
 ## TO-DOne
 
